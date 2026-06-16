@@ -32,7 +32,13 @@ with st.expander("METODOLOGÍA DEL ESTUDIO", expanded=False):
 
 @st.cache_data
 def load_data():
+    import os
     DATA_PATH = "data/03_processed/corpus_nlp_features_completo.parquet"
+    
+    # Fallback por si el archivo se subió a la raíz del repositorio en GitHub
+    if not os.path.exists(DATA_PATH):
+        DATA_PATH = "corpus_nlp_features_completo.parquet"
+        
     # Cache invalidado: cargando data nueva post-pipeline (Ensemble Zero-Shot + SpaCy Logic Restored)
     df = pd.read_parquet(DATA_PATH)
     
