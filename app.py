@@ -8,9 +8,11 @@ pio.templates.default = "plotly_white"
 pio.templates["plotly_white"].layout.xaxis.showgrid = True
 pio.templates["plotly_white"].layout.xaxis.gridcolor = "lightgray"
 pio.templates["plotly_white"].layout.xaxis.gridwidth = 1
+pio.templates["plotly_white"].layout.xaxis.fixedrange = True  # Desactiva zoom/pan horizontal
 pio.templates["plotly_white"].layout.yaxis.showgrid = True
 pio.templates["plotly_white"].layout.yaxis.gridcolor = "lightgray"
 pio.templates["plotly_white"].layout.yaxis.gridwidth = 1
+pio.templates["plotly_white"].layout.yaxis.fixedrange = True  # Desactiva zoom/pan vertical
 pio.templates["plotly_white"].layout.font.color = "black"
 # Optimización Móvil Global (Márgenes ajustados y Leyendas horizontales)
 pio.templates["plotly_white"].layout.margin = dict(l=10, r=10, t=60, b=10)
@@ -82,7 +84,7 @@ if not df_filtrado.empty:
         
     df_resultados = df_filtrado[(df_filtrado['medio_emisor'] == medio_buscador) & (df_filtrado['fecha_str'] == fecha_buscador)]
     
-    if st.sidebar.button("Buscar Noticia", type="primary", use_container_width=True, theme=None):
+    if st.sidebar.button("Buscar Noticia", type="primary", use_container_width=True):
         if df_resultados.empty:
             st.sidebar.error("No se encontraron noticias.")
         else:
@@ -142,7 +144,7 @@ if not df_filtrado.empty:
     df_mostrar.index.name = 'Número de noticias'
     df_mostrar.index = df_mostrar.index + 1
     
-    st.dataframe(df_mostrar, use_container_width=True, theme=None)
+    st.dataframe(df_mostrar, use_container_width=True)
 
 st.subheader("Distribución de Noticias y Red de Autorías")
 st.markdown("Distribución volumétrica del corpus, evidenciando un promedio de 250 a 300 publicaciones por medio. A la derecha, una visualización interactiva identifica a los periodistas y autores principales responsables de la cobertura por cada medio.")
@@ -364,7 +366,7 @@ with col_leyenda_tabla:
         obtener_ejemplo_real(-1.00, -0.80, "Ejemplo Genérico: El nefasto manejo de los recursos públicos demuestra una negligencia sistemática...", preferred_medio="SEMANA")
     ]
 
-    st.dataframe(pd.DataFrame(leyenda_data), hide_index=True, use_container_width=True, theme=None)
+    st.dataframe(pd.DataFrame(leyenda_data), hide_index=True, use_container_width=True)
 
 st.subheader("Visualización de Sentimientos y Mapa de Calor")
 st.markdown("Contraste de los temas abordados frente a su encuadre predominante (positivo, negativo o neutro). Adicionalmente, se presenta el Mapa de Calor Temático. (Nota metodológica: Casos de sarcasmo detectados e imputados en vivo: 0).")
