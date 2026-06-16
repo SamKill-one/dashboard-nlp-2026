@@ -82,7 +82,7 @@ if not df_filtrado.empty:
         
     df_resultados = df_filtrado[(df_filtrado['medio_emisor'] == medio_buscador) & (df_filtrado['fecha_str'] == fecha_buscador)]
     
-    if st.sidebar.button("Buscar Noticia", type="primary", use_container_width=True):
+    if st.sidebar.button("Buscar Noticia", type="primary", use_container_width=True, theme=None):
         if df_resultados.empty:
             st.sidebar.error("No se encontraron noticias.")
         else:
@@ -142,7 +142,7 @@ if not df_filtrado.empty:
     df_mostrar.index.name = 'Número de noticias'
     df_mostrar.index = df_mostrar.index + 1
     
-    st.dataframe(df_mostrar, use_container_width=True)
+    st.dataframe(df_mostrar, use_container_width=True, theme=None)
 
 st.subheader("Distribución de Noticias y Red de Autorías")
 st.markdown("Distribución volumétrica del corpus, evidenciando un promedio de 250 a 300 publicaciones por medio. A la derecha, una visualización interactiva identifica a los periodistas y autores principales responsables de la cobertura por cada medio.")
@@ -163,7 +163,7 @@ with col1:
         color_discrete_sequence=px.colors.qualitative.Prism
     )
     fig_medios.update_layout(showlegend=False, yaxis={'categoryorder':'total ascending'})
-    st.plotly_chart(fig_medios, use_container_width=True)
+    st.plotly_chart(fig_medios, use_container_width=True, theme=None)
 
 with col2:
     # Top 10 Autores (Interactivo por Medio)
@@ -191,7 +191,7 @@ with col2:
                 color_discrete_sequence=px.colors.qualitative.Vivid
             )
             fig_autores.update_layout(showlegend=False, yaxis={'categoryorder':'total ascending'})
-            st.plotly_chart(fig_autores, use_container_width=True)
+            st.plotly_chart(fig_autores, use_container_width=True, theme=None)
         else:
             st.info("No hay autores registrados para este medio.")
     else:
@@ -226,7 +226,7 @@ fig_timeline.update_layout(
     yaxis=dict(showgrid=True, gridcolor='whitesmoke')
 )
 fig_timeline.update_xaxes(tickangle=45)
-st.plotly_chart(fig_timeline, use_container_width=True)
+st.plotly_chart(fig_timeline, use_container_width=True, theme=None)
 
 # ==========================================
 # Distribución Temática Proporcional
@@ -251,7 +251,7 @@ fig_temas.update_layout(
     xaxis_title="Medio Emisor",
     yaxis_title="Porcentaje (%)"
 )
-st.plotly_chart(fig_temas, use_container_width=True)
+st.plotly_chart(fig_temas, use_container_width=True, theme=None)
 
 # ==========================================
 # Módulo 2: Encuadres de Sentimiento y Agenda Temática
@@ -286,7 +286,7 @@ with col_leyenda_barra:
         xaxis=dict(visible=False), yaxis=dict(visible=False), 
         plot_bgcolor='white', margin=dict(l=0, r=0, t=10, b=10), height=300
     )
-    st.plotly_chart(fig_scale, use_container_width=True)
+    st.plotly_chart(fig_scale, use_container_width=True, theme=None)
 
 with col_leyenda_tabla:
     leyenda_data = {
@@ -364,7 +364,7 @@ with col_leyenda_tabla:
         obtener_ejemplo_real(-1.00, -0.80, "Ejemplo Genérico: El nefasto manejo de los recursos públicos demuestra una negligencia sistemática...", preferred_medio="SEMANA")
     ]
 
-    st.dataframe(pd.DataFrame(leyenda_data), hide_index=True, use_container_width=True)
+    st.dataframe(pd.DataFrame(leyenda_data), hide_index=True, use_container_width=True, theme=None)
 
 st.subheader("Visualización de Sentimientos y Mapa de Calor")
 st.markdown("Contraste de los temas abordados frente a su encuadre predominante (positivo, negativo o neutro). Adicionalmente, se presenta el Mapa de Calor Temático. (Nota metodológica: Casos de sarcasmo detectados e imputados en vivo: 0).")
@@ -382,7 +382,7 @@ if 'prob_POS' in df_filtrado.columns and 'prob_NEG' in df_filtrado.columns and '
         title="Sentimiento Promedio por Temática Dominante",
         color_discrete_map={'Positivo': '#0571b0', 'Negativo': '#ca0020', 'Neutro': '#cccccc'}
     )
-    st.plotly_chart(fig_sentiments, use_container_width=True)
+    st.plotly_chart(fig_sentiments, use_container_width=True, theme=None)
 else:
     st.info("No se encontraron columnas de probabilidad de sentimiento en el dataset.")
 
@@ -418,7 +418,7 @@ if 'indice_sentimiento' in df_filtrado.columns and 'emocion_dominante' in df_fil
         xaxis=dict(tickangle=45, showgrid=True, gridcolor='whitesmoke'),
         yaxis=dict(showgrid=True, gridcolor='whitesmoke')
     )
-    st.plotly_chart(fig_heatmap, use_container_width=True)
+    st.plotly_chart(fig_heatmap, use_container_width=True, theme=None)
 else:
     st.info("No se encontraron las columnas necesarias (indice_sentimiento, emocion_dominante) para el mapa de calor.")
 
@@ -504,7 +504,7 @@ if 'indice_sentimiento' in df_filtrado.columns:
                 yaxis=dict(showgrid=True, gridcolor='lightgray'),
                 coloraxis=dict(colorscale='RdBu', cmin=-1, cmax=1, colorbar=dict(title="Sentimiento")) 
             )
-            st.plotly_chart(fig_agenda, use_container_width=True)
+            st.plotly_chart(fig_agenda, use_container_width=True, theme=None)
 else:
     st.info("Faltan columnas de sentimiento para la matriz de agenda.")
 
@@ -540,7 +540,7 @@ if cols_existentes:
         df_vol_cand = df_melt_cand.groupby('candidato').size().reset_index(name='menciones')
         fig_treemap = px.treemap(df_vol_cand, path=['candidato'], values='menciones', title='Panorama de Menciones', height=600)
         fig_treemap.update_traces(textinfo="label+value")
-        st.plotly_chart(fig_treemap, use_container_width=True)
+        st.plotly_chart(fig_treemap, use_container_width=True, theme=None)
             
         # 2. DISPERSIÓN: Frecuencia vs Extensión
         st.subheader("Frecuencia vs. Extensión")
@@ -549,7 +549,7 @@ if cols_existentes:
             df_disp = df_melt_cand.groupby('candidato').agg(frecuencia=('sesgo', 'count'), longitud=('len_cuerpo_words', 'mean')).reset_index()
             fig_scatter_cand = px.scatter(df_disp, x='frecuencia', y='longitud', text='candidato', size='frecuencia', title='Frecuencia vs. Extensión', height=600)
             fig_scatter_cand.update_traces(textposition='top center')
-            st.plotly_chart(fig_scatter_cand, use_container_width=True)
+            st.plotly_chart(fig_scatter_cand, use_container_width=True, theme=None)
         else:
             st.info("No se puede graficar dispersión por falta de la columna de longitud del cuerpo.")
 
@@ -575,7 +575,7 @@ if cols_existentes:
             xaxis_title="Medios de Comunicación",
             yaxis_title="Volumen de Menciones"
         )
-        st.plotly_chart(fig_barras, use_container_width=True)
+        st.plotly_chart(fig_barras, use_container_width=True, theme=None)
         
     else:
         st.warning("No hay datos suficientes después de la limpieza para graficar el módulo de candidatos.")
@@ -680,7 +680,7 @@ if not df_tiempo.empty:
                     font=dict(size=10)
                 )
                 
-                st.plotly_chart(fig_hm, use_container_width=True)
+                st.plotly_chart(fig_hm, use_container_width=True, theme=None)
             else:
                 st.info("No hay datos suficientes (que pasen el filtro de volumen) para este medio.")
     else:
@@ -747,7 +747,7 @@ if cols_existentes_asi:
             yaxis=dict(showgrid=True, gridcolor='whitesmoke')
         )
         
-        st.plotly_chart(fig_asi, use_container_width=True)
+        st.plotly_chart(fig_asi, use_container_width=True, theme=None)
         
         with st.expander("📊 Resumen de Encuadres Mapeados (Datos Exactos)"):
             st.dataframe(df_hostil['sesgo'].value_counts().reset_index(name='Cantidad').rename(columns={'sesgo': 'Encuadre Hostil'}))
@@ -786,7 +786,7 @@ if 'df_melt_cand' in locals() and not df_melt_cand.empty:
             xaxis_title="Línea de Tiempo",
             yaxis_title="Promedio Móvil de Ataques (7 días)"
         )
-        st.plotly_chart(fig_sma, use_container_width=True)
+        st.plotly_chart(fig_sma, use_container_width=True, theme=None)
     else:
         st.info("No se detectaron ataques o victimizaciones para graficar tendencias.")
 else:
@@ -898,7 +898,7 @@ if 'indice_sentimiento' in df_filtrado.columns:
                     xaxis=dict(showgrid=True, gridcolor='white', tickangle=45),
                     coloraxis=dict(colorscale='RdBu', cmin=-1, cmax=1, colorbar=dict(title="Sentimiento<br>Editorial"))
                 )
-                st.plotly_chart(fig_alianzas, use_container_width=True)
+                st.plotly_chart(fig_alianzas, use_container_width=True, theme=None)
             else:
                 st.info("No se encontraron coaliciones duras (≥ 2 medios frecuentes o ≥ 3 medios sincronizados) para este tema.")
         else:
@@ -1025,7 +1025,7 @@ if cols_existentes_causal:
             range=[0, limite_y_derecho] 
         )
 
-        st.plotly_chart(fig_time, use_container_width=True)
+        st.plotly_chart(fig_time, use_container_width=True, theme=None)
     else:
         st.info("No hay candidatos con suficientes datos o ataques para graficar el efecto dominó.")
 else:
@@ -1144,7 +1144,7 @@ if cols_existentes_logit and 'prob_NEG' in df_analisis.columns and 'prob_fear' i
             annotation_font_color="gray"
         )
 
-        st.plotly_chart(fig5c, use_container_width=True)
+        st.plotly_chart(fig5c, use_container_width=True, theme=None)
     else:
         st.info("No hay suficientes datos limpios para ejecutar la regresión logística.")
 else:
