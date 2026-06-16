@@ -12,6 +12,9 @@ pio.templates["plotly_white"].layout.yaxis.showgrid = True
 pio.templates["plotly_white"].layout.yaxis.gridcolor = "lightgray"
 pio.templates["plotly_white"].layout.yaxis.gridwidth = 1
 pio.templates["plotly_white"].layout.font.color = "black"
+# Optimización Móvil Global (Márgenes ajustados y Leyendas horizontales)
+pio.templates["plotly_white"].layout.margin = dict(l=10, r=10, t=60, b=10)
+pio.templates["plotly_white"].layout.legend = dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5)
 
 st.set_page_config(page_title="Observatorio de Sesgo", layout="wide")
 
