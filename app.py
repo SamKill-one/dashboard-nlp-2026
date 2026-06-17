@@ -275,8 +275,6 @@ st.plotly_chart(fig_temas, use_container_width=True, theme=None, config={'displa
 # ==========================================
 st.header("Módulo 2: Encuadres de Sentimiento y Agenda Temática")
 
-st.subheader("Índice de Sentimiento Editorial")
-
 st.markdown('''
 <div style="display: flex; align-items: center; justify-content: flex-start; gap: 20px; margin-bottom: 20px; padding-top: 10px;">
     <div style="display: flex; flex-direction: column; align-items: center; min-width: 80px;">
@@ -286,10 +284,13 @@ st.markdown('''
     </div>
     <div style="font-size: 0.9em; text-align: justify; flex: 1;">
         <strong>Escala de Medición XLM-RoBERTa</strong><br><br>
-        La escala cromática adjunta representa la cuantificación del encuadre algorítmico calculado mediante modelos de procesamiento de lenguaje natural (NLP). El espectro oscila entre <strong>+1.0 (Azul)</strong>, que denota una cobertura periodística altamente favorable, laudatoria o de encomio y <strong>-1.0 (Rojo)</strong>, que evidencia una polaridad narrativa de alta hostilidad, enmarcamiento de crisis o ataque directo. El valor <strong>0 (Blanco)</strong> manifiesta un reportaje estrictamente neutral, desprovisto de adjetivación emocional.
+        La escala de color muestra el tono emocional de las noticias, calculado de forma automática por un modelo de Inteligencia Artificial. El espectro va desde el <strong>+1.0 (Azul)</strong>, que indica noticias con un lenguaje muy positivo, favorable o de apoyo, hasta el <strong>-1.0 (Rojo)</strong>, que señala un lenguaje de alta hostilidad, crítica directa o alerta de crisis. El valor <strong>0 (Blanco)</strong> representa reportajes estrictamente informativos y neutrales, sin emociones evidentes.
     </div>
 </div>
 ''', unsafe_allow_html=True)
+
+st.subheader("Índice de Sentimiento Editorial")
+st.markdown("La siguiente tabla detalla cómo se clasifican los niveles de positividad y negatividad en las noticias. Para cada rango numérico, se presenta su significado periodístico (encuadre editorial) y se incluye un ejemplo real extraído de la base de datos para ilustrar el tono de la cobertura.")
 
 with st.container():
     leyenda_data = {
