@@ -263,8 +263,8 @@ fig_temas.update_layout(
     xaxis_title="",
     yaxis_title="",
     legend_title_text="",
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
-    margin=dict(l=0, r=0, t=60, b=0)
+    legend=dict(orientation="h", yanchor="top", y=-0.4, xanchor="center", x=0.5),
+    margin=dict(l=0, r=0, t=60, b=120)
 )
 fig_temas.update_xaxes(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black')
 fig_temas.update_yaxes(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black')
