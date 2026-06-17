@@ -61,7 +61,8 @@ df = load_data()
 
 # Se quita el filtro global y se asigna df_filtrado directamente a df para mantener compatibilidad
 df_filtrado = df.copy()
-
+if 'tema_dominante' in df_filtrado.columns:
+    df_filtrado['tema_dominante'] = df_filtrado['tema_dominante'].replace('transición energética y medio ambiente', 'Transición<br>Energ.')
 # ==============================================================================
 # Buscador Ciudadano Interactivo de Noticias (EN EL SIDEBAR)
 # ==============================================================================
@@ -368,7 +369,7 @@ with st.container():
         obtener_ejemplo_real(-1.00, -0.80, "Ejemplo Genérico: El nefasto manejo de los recursos públicos demuestra una negligencia sistemática...", preferred_medio="SEMANA")
     ]
 
-    st.table(pd.DataFrame(leyenda_data))
+    st.dataframe(pd.DataFrame(leyenda_data), hide_index=True, use_container_width=True)
 
 st.subheader("Visualización de Sentimientos y Mapa de Calor")
 st.markdown("Contraste de los temas abordados frente a su encuadre predominante (positivo, negativo o neutro). Adicionalmente, se presenta el Mapa de Calor Temático. (Nota metodológica: Casos de sarcasmo detectados e imputados en vivo: 0).")
