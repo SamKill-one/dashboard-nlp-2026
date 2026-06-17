@@ -232,7 +232,7 @@ fig_timeline.update_layout(
     xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black'),
     yaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black', showticklabels=False),
     legend_title_text="",
-    height=250,
+    height=350,
     margin=dict(t=40, b=0, l=0, r=0)
 )
 fig_timeline.update_xaxes(tickangle=0, tickformat="%b")
