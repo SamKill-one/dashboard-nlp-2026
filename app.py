@@ -460,11 +460,6 @@ if 'indice_sentimiento' in df_filtrado.columns and 'emocion_dominante' in df_fil
         yaxis=dict(showgrid=True, gridcolor='whitesmoke')
     )
     st.plotly_chart(fig_heatmap, use_container_width=True, theme=None, config={'displayModeBar': False})
-    
-    st.markdown("""
-    **Glosario de Temas:** 
-    **PT** (Paz Total), **Ins** (Institucional), **TE** (Transición Energética), **Eco** (Economía y Reformas), **Cor** (Corrupción y Escándalos), **Camp** (Campañas Electorales), **Just** (Justicia y DDHH), **Seg** (Orden Público y Seguridad).
-    """)
 else:
     st.info("No se encontraron las columnas necesarias (indice_sentimiento, emocion_dominante) para el mapa de calor.")
 
@@ -865,13 +860,13 @@ if cols_existentes_asi:
             title=f'Asimetría de Encuadres: Volumen Total de Hostilidad (N={total_hostil})',
             labels=dict(x="", y="", color=""),
             aspect="auto",
-            height=900
+            height=500
         )
         
         fig_asi.update_layout(coloraxis_colorbar=dict(thickness=10, title=""),
             plot_bgcolor='white',
-            xaxis=dict(tickangle=45, showgrid=True, gridcolor='whitesmoke'),
-            yaxis=dict(showgrid=True, gridcolor='whitesmoke')
+            xaxis=dict(tickangle=45, showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
+            yaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8)
         )
         
         st.plotly_chart(fig_asi, use_container_width=True, theme=None, config={'displayModeBar': False})
@@ -1026,7 +1021,7 @@ if 'indice_sentimiento' in df_filtrado.columns:
                     xaxis_title="",
                     yaxis_title="",
                     yaxis=dict(categoryorder='array', categoryarray=orden_y, showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, automargin=True),
-                    height=800,
+                    height=500,
                     margin=dict(l=0, r=10, t=100, b=50), 
                     plot_bgcolor='white', 
                     xaxis=dict(showgrid=True, gridcolor='whitesmoke', tickangle=0, showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
