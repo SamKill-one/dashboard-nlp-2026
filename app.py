@@ -706,7 +706,7 @@ if not df_tiempo.empty:
                 fig_hm = go.Figure(data=go.Heatmap(
                     z=matriz_z.values,
                     x=meses_unicos_hm,
-                    y=candidatos_unicos_hm,
+                    y=[cand.replace(' ', '<br>') for cand in candidatos_unicos_hm],
                     text=matriz_text.values,
                     texttemplate="%{text}",      
                     hoverinfo="text",            
@@ -714,7 +714,7 @@ if not df_tiempo.empty:
                     xgap=2, ygap=2               
                 ))
                 
-                fig_hm.update_layout(coloraxis_colorbar=dict(thickness=10, title=""),
+                fig_hm.update_layout(
                     title=f"Evolución del Encuadre Mensual: <b>{medio_hm}</b><br><sup>(Filtro riguroso: >4 noticias/mes | Tema, Rol, Volumen y Tono)</sup>",
                     xaxis_title="",
                     yaxis_title="",
@@ -722,7 +722,7 @@ if not df_tiempo.empty:
                     coloraxis=dict(
                         colorscale='RdBu', 
                         cmin=-1, cmax=1, 
-                        colorbar=dict(title="Tono Editorial<br>(-1 Ataque | +1 Defensa)")
+                        colorbar=dict(title="", thickness=10)
                     ),
                     plot_bgcolor='white',
                     font=dict(size=10)
