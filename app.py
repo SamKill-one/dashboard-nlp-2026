@@ -277,40 +277,19 @@ st.header("Módulo 2: Encuadres de Sentimiento y Agenda Temática")
 
 st.subheader("Índice de Sentimiento Editorial")
 
-col_barra, col_texto = st.columns([1, 1.5])
-
-with col_barra:
-    import plotly.graph_objects as go
-    fig_scale = go.Figure(data=go.Scatter(
-        x=[0], y=[0], mode='markers',
-        marker=dict(
-            colorscale='RdBu', cmin=-1, cmax=1,
-            color=[0], showscale=True, size=0,
-            colorbar=dict(
-                title="", 
-                tickvals=[-1, -0.5, 0, 0.5, 1], 
-                ticktext=["-1 (Hostil)", "-0.5", "0 (Neutro)", "+0.5", "+1 (Favorable)"],
-                thickness=15,
-                len=1.0,
-                outlinecolor="whitesmoke",
-                bordercolor="whitesmoke",
-                borderwidth=1
-            )
-        )
-    ))
-    fig_scale.update_layout(
-        xaxis=dict(visible=False), yaxis=dict(visible=False), 
-        plot_bgcolor='white', margin=dict(l=10, r=10, t=10, b=10), height=250
-    )
-    st.plotly_chart(fig_scale, use_container_width=True, theme=None, config={'displayModeBar': False})
-
-with col_texto:
-    st.markdown('''
-    <div style="font-size: 0.9em; text-align: justify; padding-top: 15px;">
-    <strong>Escala de Medición XLM-RoBERTa</strong><br>
-    La escala cromática adjunta representa la cuantificación del encuadre algorítmico calculado mediante modelos de procesamiento de lenguaje natural (NLP). El espectro oscila entre <strong>+1.0 (Azul)</strong>, que denota una cobertura periodística altamente favorable, laudatoria o de encomio y <strong>-1.0 (Rojo)</strong>, que evidencia una polaridad narrativa de alta hostilidad, enmarcamiento de crisis o ataque directo. El valor <strong>0 (Blanco)</strong> manifiesta un reportaje estrictamente neutral, desprovisto de adjetivación emocional.
+st.markdown('''
+<div style="display: flex; align-items: center; justify-content: flex-start; gap: 20px; margin-bottom: 20px; padding-top: 10px;">
+    <div style="display: flex; flex-direction: column; align-items: center; min-width: 80px;">
+        <span style="font-size: 0.75em; font-weight: bold; color: #053061;">+1 (Favorable)</span>
+        <div style="width: 20px; height: 180px; background: linear-gradient(to bottom, #053061, #4393c3, whitesmoke, #d6604d, #67001f); border: 1px solid #ccc; border-radius: 4px; margin: 4px 0;"></div>
+        <span style="font-size: 0.75em; font-weight: bold; color: #67001f;">-1 (Hostil)</span>
     </div>
-    ''', unsafe_allow_html=True)
+    <div style="font-size: 0.9em; text-align: justify; flex: 1;">
+        <strong>Escala de Medición XLM-RoBERTa</strong><br><br>
+        La escala cromática adjunta representa la cuantificación del encuadre algorítmico calculado mediante modelos de procesamiento de lenguaje natural (NLP). El espectro oscila entre <strong>+1.0 (Azul)</strong>, que denota una cobertura periodística altamente favorable, laudatoria o de encomio y <strong>-1.0 (Rojo)</strong>, que evidencia una polaridad narrativa de alta hostilidad, enmarcamiento de crisis o ataque directo. El valor <strong>0 (Blanco)</strong> manifiesta un reportaje estrictamente neutral, desprovisto de adjetivación emocional.
+    </div>
+</div>
+''', unsafe_allow_html=True)
 
 with st.container():
     leyenda_data = {
