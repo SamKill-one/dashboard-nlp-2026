@@ -571,10 +571,15 @@ if cols_existentes:
             df_disp = df_melt_cand.groupby('candidato').agg(frecuencia=('sesgo', 'count'), longitud=('len_cuerpo_words', 'mean')).reset_index()
             fig_scatter_cand = px.scatter(
                 df_disp, x='frecuencia', y='longitud', text='candidato', size='frecuencia', 
-                title='<b>Frecuencia vs. Extensión</b>', height=600
+                title='<b>Frecuencia de Menciones vs. Longitud de los Artículos</b>', height=600
             )
             
-            posiciones = ['middle right' if ('Claudia' in str(c) or 'Sergio' in str(c)) else 'top center' for c in df_disp['candidato']]
+            def get_position(c):
+                if 'Claudia' in str(c): return 'bottom right'
+                if 'Sergio' in str(c): return 'middle right'
+                return 'top center'
+                
+            posiciones = [get_position(c) for c in df_disp['candidato']]
             fig_scatter_cand.update_traces(textposition=posiciones, cliponaxis=False)
             
             fig_scatter_cand.update_layout(
