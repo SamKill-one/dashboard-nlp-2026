@@ -596,7 +596,7 @@ if cols_existentes:
 
         # 3. BARRAS AGRUPADAS: Perfil Editorial del Medio
         st.subheader("Perfil Editorial (Volumen de Cobertura)")
-        st.markdown("Cuantificación de la atención prestada por cada medio a los candidatos. El conteo considera la co-ocurrencia de entidades, registrando los casos donde un artículo menciona a múltiples actores simultáneamente.")
+        st.markdown("La siguiente gráfica muestra la cuantificación de la atención prestada por cada medio a los actores políticos.")
         df_medios_cand = df_melt_cand.groupby(['medio_emisor', 'candidato']).size().reset_index(name='menciones')
         
         fig_barras = px.bar(
@@ -604,17 +604,22 @@ if cols_existentes:
             x='medio_emisor',      
             y='menciones', 
             color='candidato',     
-            title='Perfil Editorial: Volumen de Cobertura',
+            title='<b>Perfil Editorial: Volumen de Cobertura</b>',
             text_auto=True,
             barmode='group',       
             height=500
         )
         
+        fig_barras.update_traces(textposition='outside')
+        
         fig_barras.update_layout(
-            xaxis={'categoryorder':'total descending'}, 
             plot_bgcolor='white',
             xaxis_title="",
-            yaxis_title=""
+            yaxis_title="",
+            legend_title_text="",
+            xaxis=dict(showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, categoryorder='total descending'),
+            yaxis=dict(showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, showticklabels=False),
+            margin=dict(t=80)
         )
         st.plotly_chart(fig_barras, use_container_width=True, theme=None, config={'displayModeBar': False})
         
