@@ -574,7 +574,7 @@ if cols_existentes:
                 title='<b>Frecuencia vs. Extensión</b>', height=600
             )
             
-            posiciones = ['bottom center' if 'Claudia' in str(c) else 'top center' for c in df_disp['candidato']]
+            posiciones = ['middle right' if ('Claudia' in str(c) or 'Sergio' in str(c)) else 'top center' for c in df_disp['candidato']]
             fig_scatter_cand.update_traces(textposition=posiciones, cliponaxis=False)
             
             fig_scatter_cand.update_layout(
