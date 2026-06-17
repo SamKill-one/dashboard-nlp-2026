@@ -166,7 +166,7 @@ with col1:
         text='medio'
     )
     fig_medios.update_traces(texttemplate='<b>%{text}</b>', textposition='auto', insidetextanchor='middle', textfont=dict(size=14))
-    fig_medios.update_layout(showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=True, gridcolor='whitesmoke'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
+    fig_medios.update_layout(showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
     st.plotly_chart(fig_medios, use_container_width=True, theme=None, config={'displayModeBar': False})
 
 with col2:
@@ -197,7 +197,7 @@ with col2:
                 text='autor'
             )
             fig_autores.update_traces(texttemplate='<b>%{text}</b>', textposition='auto', insidetextanchor='middle', textfont=dict(size=14))
-            fig_autores.update_layout(showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=True, gridcolor='whitesmoke'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
+            fig_autores.update_layout(showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
             st.plotly_chart(fig_autores, use_container_width=True, theme=None, config={'displayModeBar': False})
         else:
             st.info("No hay autores registrados para este medio.")
@@ -229,10 +229,13 @@ fig_timeline.update_layout(
     xaxis_title="", 
     yaxis_title="",
     plot_bgcolor='white',
-    xaxis=dict(showgrid=True, gridcolor='whitesmoke'),
-    yaxis=dict(showgrid=True, gridcolor='whitesmoke', showticklabels=False)
+    xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black'),
+    yaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black', showticklabels=False),
+    legend_title_text="",
+    height=250,
+    margin=dict(t=40, b=0, l=0, r=0)
 )
-fig_timeline.update_xaxes(tickangle=45)
+fig_timeline.update_xaxes(tickangle=0, tickformat="%b")
 st.plotly_chart(fig_timeline, use_container_width=True, theme=None, config={'displayModeBar': False})
 
 # ==========================================
