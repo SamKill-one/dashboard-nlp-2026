@@ -141,7 +141,7 @@ if not df_filtrado.empty:
     })
     
     df_mostrar = df_mostrar.sample(frac=1.0).reset_index(drop=True)
-    df_mostrar.index.name = 'Número de noticias'
+    df_mostrar.index.name = '#'
     df_mostrar.index = df_mostrar.index + 1
     
     st.dataframe(df_mostrar, use_container_width=True)
@@ -165,7 +165,8 @@ with col1:
         color_discrete_sequence=px.colors.qualitative.Prism,
         text='medio'
     )
-    fig_medios.update_layout(showlegend=False, yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': ''})
+    fig_medios.update_traces(texttemplate='<b>%{text}</b>', textposition='inside', insidetextanchor='middle', textfont=dict(size=14, color='white'))
+    fig_medios.update_layout(showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
     st.plotly_chart(fig_medios, use_container_width=True, theme=None, config={'displayModeBar': False})
 
 with col2:
@@ -174,11 +175,11 @@ with col2:
         df_autores = df_filtrado.dropna(subset=['autor']).copy()
         df_autores = df_autores[df_autores['autor'].astype(str).str.strip() != '']
         
-        opciones_autores = ['VISIÓN GLOBAL (Todos los Medios)'] + sorted(df_autores['medio_emisor'].unique().tolist())
-        medio_autor = st.selectbox("Filtrar Autores por Medio:", opciones_autores, key="autor_medio")
+        opciones_autores = sorted(df_autores['medio_emisor'].unique().tolist())
+        idx_caracol = next((i for i, m in enumerate(opciones_autores) if "CARACOL" in str(m).upper()), 0)
+        medio_autor = st.selectbox("Filtrar Autores por Medio:", opciones_autores, index=idx_caracol, key="autor_medio")
         
-        if medio_autor != 'VISIÓN GLOBAL (Todos los Medios)':
-            df_autores = df_autores[df_autores['medio_emisor'] == medio_autor]
+        df_autores = df_autores[df_autores['medio_emisor'] == medio_autor]
             
         if not df_autores.empty:
             df_autores['autor'] = df_autores['autor'].astype(str).str.split('-').str[0].str.split('|').str[0].str.strip()
@@ -195,7 +196,8 @@ with col2:
                 color_discrete_sequence=px.colors.qualitative.Vivid,
                 text='autor'
             )
-            fig_autores.update_layout(showlegend=False, yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': ''})
+            fig_autores.update_traces(texttemplate='<b>%{text}</b>', textposition='inside', insidetextanchor='middle', textfont=dict(size=14, color='white'))
+            fig_autores.update_layout(showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
             st.plotly_chart(fig_autores, use_container_width=True, theme=None, config={'displayModeBar': False})
         else:
             st.info("No hay autores registrados para este medio.")
