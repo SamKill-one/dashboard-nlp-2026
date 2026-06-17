@@ -276,10 +276,10 @@ st.plotly_chart(fig_temas, use_container_width=True, theme=None, config={'displa
 st.header("Módulo 2: Encuadres de Sentimiento y Agenda Temática")
 
 st.subheader("Índice de Sentimiento Editorial")
-st.markdown("Guía de Interpretación: La siguiente tabla define los rangos numéricos asignados por los modelos de IA, su etiqueta cualitativa, el encuadre editorial y ejemplos literales extraídos del corpus.")
-col_leyenda_barra, col_leyenda_tabla = st.columns([0.8, 5])
 
-with col_leyenda_barra:
+col_barra, col_texto = st.columns([1, 1.5])
+
+with col_barra:
     import plotly.graph_objects as go
     fig_scale = go.Figure(data=go.Scatter(
         x=[0], y=[0], mode='markers',
@@ -289,23 +289,30 @@ with col_leyenda_barra:
             colorbar=dict(
                 title="", 
                 tickvals=[-1, -0.5, 0, 0.5, 1], 
-                ticktext=["-1 (Rojo/Hostil)", "-0.5", "0 (Neutro)", "+0.5", "+1 (Azul/Favorable)"],
-                thickness=20,
+                ticktext=["-1 (Hostil)", "-0.5", "0 (Neutro)", "+0.5", "+1 (Favorable)"],
+                thickness=15,
                 len=1.0,
                 outlinecolor="whitesmoke",
                 bordercolor="whitesmoke",
-                borderwidth=1,
-                x=0.8
+                borderwidth=1
             )
         )
     ))
     fig_scale.update_layout(
         xaxis=dict(visible=False), yaxis=dict(visible=False), 
-        plot_bgcolor='white', margin=dict(l=0, r=0, t=10, b=10), height=300
+        plot_bgcolor='white', margin=dict(l=10, r=10, t=10, b=10), height=250
     )
     st.plotly_chart(fig_scale, use_container_width=True, theme=None, config={'displayModeBar': False})
 
-with col_leyenda_tabla:
+with col_texto:
+    st.markdown('''
+    <div style="font-size: 0.9em; text-align: justify; padding-top: 15px;">
+    <strong>Escala de Medición XLM-RoBERTa</strong><br>
+    La escala cromática adjunta representa la cuantificación del encuadre algorítmico calculado mediante modelos de procesamiento de lenguaje natural (NLP). El espectro oscila entre <strong>+1.0 (Azul)</strong>, que denota una cobertura periodística altamente favorable, laudatoria o de encomio y <strong>-1.0 (Rojo)</strong>, que evidencia una polaridad narrativa de alta hostilidad, enmarcamiento de crisis o ataque directo. El valor <strong>0 (Blanco)</strong> manifiesta un reportaje estrictamente neutral, desprovisto de adjetivación emocional.
+    </div>
+    ''', unsafe_allow_html=True)
+
+with st.container():
     leyenda_data = {
         "Rango Numérico": [
             "+0.80 a +1.00", "+0.50 a +0.79", "+0.15 a +0.49", 
