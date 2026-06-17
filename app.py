@@ -422,12 +422,14 @@ if 'indice_sentimiento' in df_filtrado.columns and 'emocion_dominante' in df_fil
     matriz_enc = df_enc.pivot(index='medio_emisor', columns='tema_dominante', values='indice_sentimiento').fillna(0)
 
     # 3. Renderizado del Mapa de Calor
+    st.markdown("El siguiente **Mapa de Calor** visualiza el cruce entre los medios de comunicación y los temas dominantes. El tono y la intensidad del color de cada celda reflejan el encuadre promedio de las noticias, donde el número interno corresponde directamente al índice de sentimiento. Guiándose por la barra cromática de la derecha, esta matriz permite identificar rápidamente de un solo vistazo si la cobertura de un medio frente a un tema específico es marcadamente **hostil (rojo)**, **neutral (blanco)** o **favorable (azul)**.")
+    
     fig_heatmap = px.imshow(
         matriz_enc, 
         text_auto=".2f",
         color_continuous_scale='RdBu',
         zmin=-1, zmax=1,
-        title='Encuadre Temático: Promedio de Sentimiento por Medio y Tema',
+        title='<b>Encuadre Temático: Promedio de Sentimiento por Medio y Tema</b>',
         labels=dict(x="", y="", color=""),
         aspect="auto",
         height=600
@@ -445,7 +447,7 @@ else:
 # Matriz de Carriles Temáticos (Agenda Matrix)
 # ==============================================================================
 st.subheader("Matriz de Agenda (Top Temas Prioritarios)")
-st.markdown("Evolución longitudinal de las temáticas por medio emisor. El color de la esfera indica la polaridad del encuadre; la ausencia de esfera indica nula cobertura, un diámetro menor equivale a una noticia y un diámetro mayor representa múltiples publicaciones.")
+st.markdown("Evolución temporal de las temáticas por medio emisor. El color del círculo indica la polaridad del encuadre al igual que el mapa de calor anterior; la ausencia de un círculo indica que en esa fecha no hay noticias, los círculos pequeños equivalen a una noticia y los círculos grandes representan dos noticias.")
 
 import plotly.graph_objects as go
 
@@ -498,7 +500,7 @@ if 'indice_sentimiento' in df_filtrado.columns:
                 hover_texts.append(txt)
             
             fig_agenda.add_trace(go.Scatter(
-                x=df_top['fecha_dia'].astype(str).tolist(),
+                x=pd.to_datetime(df_top['fecha_dia']),
                 y=df_top['tema_dominante'].astype(str).tolist(),
                 mode='markers',
                 text=hover_texts,
@@ -513,15 +515,16 @@ if 'indice_sentimiento' in df_filtrado.columns:
                 name=medio_seleccionado
             ))
             
-            fig_agenda.update_layout(coloraxis_colorbar=dict(thickness=10, title=""),
-                title=f"Matriz de Agenda para {medio_seleccionado} (Tamaño=Volumen | Color=Sentimiento)",
+            fig_agenda.update_layout(
+                coloraxis=dict(colorscale='RdBu', cmin=-1, cmax=1, colorbar=dict(thickness=10, title="")),
+                title=f"<b>Matriz de Agenda para {medio_seleccionado}</b>",
                 xaxis_title="",
                 yaxis_title="",
                 height=600,
                 plot_bgcolor='white', 
-                xaxis=dict(showgrid=True, gridcolor='lightgray', gridwidth=0.5), 
+                xaxis=dict(type='date', dtick="M1", tickformat="%b", showgrid=True, gridcolor='lightgray', gridwidth=0.5), 
                 yaxis=dict(showgrid=True, gridcolor='lightgray'),
-                coloraxis=dict(colorscale='RdBu', cmin=-1, cmax=1, colorbar=dict(title="Sentimiento")) 
+                margin=dict(l=0, r=0, t=60, b=0)
             )
             st.plotly_chart(fig_agenda, use_container_width=True, theme=None, config={'displayModeBar': False})
 else:
