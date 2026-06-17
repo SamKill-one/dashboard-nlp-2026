@@ -165,8 +165,8 @@ with col1:
         color_discrete_sequence=px.colors.qualitative.Prism,
         text='medio'
     )
-    fig_medios.update_traces(texttemplate='<b>%{text}</b>', textposition='inside', insidetextanchor='middle', textfont=dict(size=14, color='white'))
-    fig_medios.update_layout(showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
+    fig_medios.update_traces(texttemplate='<b>%{text}</b>', textposition='auto', insidetextanchor='middle', textfont=dict(size=14))
+    fig_medios.update_layout(showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=True, gridcolor='whitesmoke'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
     st.plotly_chart(fig_medios, use_container_width=True, theme=None, config={'displayModeBar': False})
 
 with col2:
@@ -196,8 +196,8 @@ with col2:
                 color_discrete_sequence=px.colors.qualitative.Vivid,
                 text='autor'
             )
-            fig_autores.update_traces(texttemplate='<b>%{text}</b>', textposition='inside', insidetextanchor='middle', textfont=dict(size=14, color='white'))
-            fig_autores.update_layout(showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
+            fig_autores.update_traces(texttemplate='<b>%{text}</b>', textposition='auto', insidetextanchor='middle', textfont=dict(size=14))
+            fig_autores.update_layout(showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=True, gridcolor='whitesmoke'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
             st.plotly_chart(fig_autores, use_container_width=True, theme=None, config={'displayModeBar': False})
         else:
             st.info("No hay autores registrados para este medio.")
