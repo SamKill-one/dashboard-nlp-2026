@@ -368,7 +368,7 @@ with st.container():
         obtener_ejemplo_real(-1.00, -0.80, "Ejemplo Genérico: El nefasto manejo de los recursos públicos demuestra una negligencia sistemática...", preferred_medio="SEMANA")
     ]
 
-    st.dataframe(pd.DataFrame(leyenda_data), hide_index=True, use_container_width=True)
+    st.table(pd.DataFrame(leyenda_data))
 
 st.subheader("Visualización de Sentimientos y Mapa de Calor")
 st.markdown("Contraste de los temas abordados frente a su encuadre predominante (positivo, negativo o neutro). Adicionalmente, se presenta el Mapa de Calor Temático. (Nota metodológica: Casos de sarcasmo detectados e imputados en vivo: 0).")
@@ -383,8 +383,22 @@ if 'prob_POS' in df_filtrado.columns and 'prob_NEG' in df_filtrado.columns and '
         y='Probabilidad Media',
         color='Sentimiento',
         barmode='group',
-        title="Sentimiento Promedio por Temática Dominante",
+        title="<b>Sentimiento Promedio por Temática Dominante</b>",
         color_discrete_map={'Positivo': '#0571b0', 'Negativo': '#ca0020', 'Neutro': '#cccccc'}
+    )
+    fig_sentiments.update_traces(texttemplate='<b>%{y:.2f}</b>', textposition='outside')
+    fig_sentiments.for_each_trace(lambda t: t.update(
+        name=f"<b>{t.name}</b>",
+        textfont=dict(color=t.marker.color)
+    ))
+    fig_sentiments.update_layout(
+        xaxis_title="", 
+        yaxis_title="",
+        legend_title_text="",
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+        xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black'),
+        yaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black', showticklabels=False),
+        margin=dict(l=0, r=0, t=80, b=0)
     )
     st.plotly_chart(fig_sentiments, use_container_width=True, theme=None, config={'displayModeBar': False})
 else:
