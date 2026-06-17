@@ -918,8 +918,8 @@ if 'df_melt_cand' in locals() and not df_melt_cand.empty:
 else:
     st.error("No se encontró la base de datos pre-procesada de candidatos (Módulo 3) requerida para las tendencias.")
 
-st.subheader("Línea de Tiempo de Alianzas Editoriales")
-st.markdown("Algoritmo de detección de coaliciones. Identifica periodos donde dos o más medios convergen temáticamente con un índice de sentimiento inferior a -0.38, indicador de tensión leve, distanciamiento crítico o cuestionamientos indirectos.")
+st.subheader("Línea de Tiempo: Coordinación en Encuadre de sentimiento Editorial")
+st.markdown("Algoritmo de detección de coordinación. Identifica periodos donde dos o más medios convergen temáticamente con un índice de sentimiento inferior a -0.38, indicador de tensión leve, distanciamiento crítico o cuestionamientos indirectos.")
 
 if 'indice_sentimiento' in df_filtrado.columns:
     df_ataques = df_filtrado[df_filtrado['indice_sentimiento'] <= -0.38].copy()
@@ -933,7 +933,7 @@ if 'indice_sentimiento' in df_filtrado.columns:
             top_temas_ataques.insert(0, 'internacional')
         
         default_index = top_temas_ataques.index('internacional')
-        tema_alianza = st.selectbox("Selecciona la Perspectiva Temática para evaluar Coaliciones:", top_temas_ataques, index=default_index)
+        tema_alianza = st.selectbox("Selecciona la Perspectiva Temática para evaluar la Coordinación:", top_temas_ataques, index=default_index)
         
         df_filtro_alianza = df_ataques[df_ataques['tema_dominante'] == tema_alianza]
             
@@ -1016,12 +1016,14 @@ if 'indice_sentimiento' in df_filtrado.columns:
                 import textwrap
                 opcion_corta = textwrap.shorten(tema_alianza, width=45, placeholder="...")
                 
+                altura_dinamica = max(500, len(orden_y) * 90)
+                
                 fig_alianzas.update_layout(
-                    title=f"Evolución de Mega-Alianzas<br><sup>Tema: <b>{opcion_corta}</b> (Tamaño = Días Coordinados | Color = Sentimiento -1 a +1)</sup>",
+                    title=f"Evolución de la Coordinación Editorial<br><sup>Tema: <b>{opcion_corta}</b> (Tamaño = Días Coordinados | Color = Sentimiento -1 a +1)</sup>",
                     xaxis_title="",
                     yaxis_title="",
-                    yaxis=dict(categoryorder='array', categoryarray=orden_y, showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, automargin=True),
-                    height=500,
+                    yaxis=dict(categoryorder='array', categoryarray=orden_y, showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, automargin=True, tickfont=dict(size=10)),
+                    height=altura_dinamica,
                     margin=dict(l=0, r=10, t=100, b=50), 
                     plot_bgcolor='white', 
                     xaxis=dict(showgrid=True, gridcolor='whitesmoke', tickangle=0, showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
@@ -1029,7 +1031,7 @@ if 'indice_sentimiento' in df_filtrado.columns:
                 )
                 st.plotly_chart(fig_alianzas, use_container_width=True, theme=None, config={'displayModeBar': False})
             else:
-                st.info("No se encontraron coaliciones duras (≥ 2 medios frecuentes o ≥ 3 medios sincronizados) para este tema.")
+                st.info("No se encontró coordinación fuerte (≥ 2 medios frecuentes o ≥ 3 medios sincronizados) para este tema.")
         else:
             st.info("No hay eventos coordinados para el tema seleccionado.")
     else:
