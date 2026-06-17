@@ -555,7 +555,7 @@ if cols_existentes:
     df_melt_cand = df_melt_cand[~df_melt_cand['sesgo'].isin(valores_ignorados)]
     df_melt_cand['candidato'] = df_melt_cand['candidato'].str.replace('_sesgo_detectado', '').str.replace('_', ' ')
     
-    st.write(f"📊 **Total de menciones válidas a graficar:** {len(df_melt_cand)}")
+    st.markdown(f"Tras procesar la base de datos mediante nuestros modelos de Machine Learning (ML), se extrajeron un total de **{len(df_melt_cand):,} menciones a actores políticos**. Este volumen supera la cantidad neta de noticias analizadas debido a que un mismo artículo periodístico frecuentemente nombra a múltiples figuras de manera simultánea. A continuación, se detalla la distribución de estas menciones para identificar cuáles personajes públicos acapararon la mayor atención mediática.")
     
     if not df_melt_cand.empty:
         # 1. TREEMAP: Volumen total
@@ -569,8 +569,22 @@ if cols_existentes:
         st.markdown("Análisis de menciones por actor político. Correlación entre la frecuencia de publicación sobre un candidato frente a la extensión promedio (cantidad de palabras) de los artículos que lo referencian.")
         if 'len_cuerpo_words' in df_filtrado.columns:
             df_disp = df_melt_cand.groupby('candidato').agg(frecuencia=('sesgo', 'count'), longitud=('len_cuerpo_words', 'mean')).reset_index()
-            fig_scatter_cand = px.scatter(df_disp, x='frecuencia', y='longitud', text='candidato', size='frecuencia', title='Frecuencia vs. Extensión', height=600)
-            fig_scatter_cand.update_traces(textposition='top center')
+            fig_scatter_cand = px.scatter(
+                df_disp, x='frecuencia', y='longitud', text='candidato', size='frecuencia', 
+                title='<b>Frecuencia vs. Extensión</b>', height=600
+            )
+            
+            posiciones = ['bottom center' if 'Claudia' in str(c) else 'top center' for c in df_disp['candidato']]
+            fig_scatter_cand.update_traces(textposition=posiciones, cliponaxis=False)
+            
+            fig_scatter_cand.update_layout(
+                plot_bgcolor='white',
+                xaxis_title="Frecuencia de Menciones de Actores Políticos",
+                yaxis_title="Longitud de Palabras",
+                xaxis=dict(showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, showgrid=True, gridcolor='whitesmoke', gridwidth=1),
+                yaxis=dict(showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, showgrid=True, gridcolor='whitesmoke', gridwidth=1),
+                margin=dict(t=80, b=40, l=40, r=40)
+            )
             st.plotly_chart(fig_scatter_cand, use_container_width=True, theme=None, config={'displayModeBar': False})
         else:
             st.info("No se puede graficar dispersión por falta de la columna de longitud del cuerpo.")
