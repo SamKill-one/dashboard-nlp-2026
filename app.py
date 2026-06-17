@@ -1025,9 +1025,9 @@ if 'indice_sentimiento' in df_filtrado.columns:
                     title=f"Evolución de Mega-Alianzas<br><sup>Tema: <b>{opcion_corta}</b> (Tamaño = Días Coordinados | Color = Sentimiento -1 a +1)</sup>",
                     xaxis_title="",
                     yaxis_title="",
-                    yaxis=dict(categoryorder='array', categoryarray=orden_y, showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
+                    yaxis=dict(categoryorder='array', categoryarray=orden_y, showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, automargin=True),
                     height=800,
-                    margin=dict(l=150, r=50, t=100, b=50), 
+                    margin=dict(l=0, r=10, t=100, b=50), 
                     plot_bgcolor='white', 
                     xaxis=dict(showgrid=True, gridcolor='whitesmoke', tickangle=0, showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
                     coloraxis=dict(colorscale='RdBu', cmin=-1, cmax=1, colorbar=dict(title=""))
