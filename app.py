@@ -218,12 +218,13 @@ fig_timeline = px.scatter(
     y='medio_emisor',
     size='cantidad',
     color='medio_emisor',
-    title="Línea de Tiempo: Cobertura Diaria Estratificada",
+    title="<b>Línea de Tiempo: Cobertura Diaria Estratificada</b>",
     labels={'fecha_dia': 'Fecha de Publicación', 'medio_emisor': 'Medio Emisor', 'cantidad': 'Volumen'},
     color_discrete_sequence=px.colors.qualitative.Set2,
     size_max=15, # [!] Tamaño reducido de 40 a 15
     opacity=0.7  # [!] Opacidad añadida para distinguir puntos superpuestos
 )
+fig_timeline.for_each_trace(lambda t: t.update(name=f"<b>{t.name}</b>"))
 fig_timeline.update_traces(marker=dict(line=dict(width=1, color='white')))
 fig_timeline.update_layout(
     xaxis_title="", 
@@ -251,16 +252,22 @@ fig_temas = px.bar(
     x='medio_emisor', 
     y='porcentaje', 
     color='tema_dominante', 
-    title='Distribución Temática Proporcional (%)', 
+    title='<b>Distribución Temática Proporcional (%)</b>', 
     barmode='group',
-    height=500
+    height=450
 )
+fig_temas.for_each_trace(lambda t: t.update(name=f"<b>{t.name}</b>"))
 fig_temas.update_layout(
     bargap=0.15,
     bargroupgap=0.05,
     xaxis_title="",
-    yaxis_title=""
+    yaxis_title="",
+    legend_title_text="",
+    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+    margin=dict(l=0, r=0, t=60, b=0)
 )
+fig_temas.update_xaxes(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black')
+fig_temas.update_yaxes(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black')
 st.plotly_chart(fig_temas, use_container_width=True, theme=None, config={'displayModeBar': False})
 
 # ==========================================
