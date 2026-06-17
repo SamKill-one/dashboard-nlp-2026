@@ -1044,7 +1044,13 @@ else:
 # ==============================================================================
 st.header("Módulo 5: Análisis Causal (Efecto Dominó y Gatillo)")
 st.subheader("Efecto Dominó")
-st.markdown("Análisis temporal mediante doble eje anclado. Contrasta la suma de la negatividad dirigida registrada en el periodo previo (t-1) frente al volumen exacto de ataques directos ejecutados (barras) en el mes/semana de estudio.")
+st.markdown("""
+**¿Para qué sirve esta gráfica?**  
+Permite descubrir si existe un **'Efecto Dominó'** en la agenda mediática. Compara cuánta negatividad acumuló un medio durante una semana, y observa si esa saturación de noticias negativas terminó provocando que a la semana siguiente se lanzaran ataques directos (encuadres de culpabilidad) contra un candidato específico.
+
+**¿Cómo se calcula?**  
+El algoritmo toma la carga de sentimiento negativo dirigida de la semana anterior (t-1) y la superpone visualmente contra el volumen exacto de ataques editoriales comprobados en la semana actual.
+""")
 
 cols_existentes_causal = [col for col in df_filtrado.columns if '_sesgo_detectado' in col]
 
@@ -1167,7 +1173,13 @@ else:
 # Curva Logit Interactiva: El Efecto Gatillo
 # ==============================================================================
 st.subheader("El Efecto Gatillo (Curva Logit)")
-st.markdown("Aplicación de un modelo predictivo multivariado (Regresión Logística). La curva proyecta la probabilidad matemática de que ocurra un encuadre de ataque directo a partir de la consolidación de un ambiente hegemónico de negatividad en los medios.")
+st.markdown("""
+**¿Para qué sirve esta gráfica?**  
+Mide la probabilidad matemática de que un medio publique un ataque directo contra un actor político, basándose en cuánta negatividad venía manejando ese medio en la semana anterior. En otras palabras, nos ayuda a predecir en qué punto de saturación la línea editorial 'jala el gatillo' y ataca.
+
+**¿Cómo se calcula?**  
+Se construyó utilizando un modelo econométrico de Regresión Logística (Curva Logit). El modelo aprende de los datos históricos cruzando los ataques confirmados (Sí/No) contra los niveles previos de negatividad y miedo presentes en los textos, trazando así una curva de probabilidad de 0 a 1 (0% a 100%).
+""")
 
 import statsmodels.formula.api as smf
 
