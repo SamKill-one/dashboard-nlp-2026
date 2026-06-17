@@ -5,11 +5,11 @@ import plotly.io as pio
 
 # Configuración Global de Gráficos Plotly
 pio.templates.default = "plotly_white"
-pio.templates["plotly_white"].layout.xaxis.showgrid = True
+pio.templates["plotly_white"].layout.xaxis.showgrid = False
 pio.templates["plotly_white"].layout.xaxis.gridcolor = "lightgray"
 pio.templates["plotly_white"].layout.xaxis.gridwidth = 1
 pio.templates["plotly_white"].layout.xaxis.fixedrange = True  # Desactiva zoom/pan horizontal
-pio.templates["plotly_white"].layout.yaxis.showgrid = True
+pio.templates["plotly_white"].layout.yaxis.showgrid = False
 pio.templates["plotly_white"].layout.yaxis.gridcolor = "lightgray"
 pio.templates["plotly_white"].layout.yaxis.gridwidth = 1
 pio.templates["plotly_white"].layout.yaxis.fixedrange = True  # Desactiva zoom/pan vertical
@@ -162,9 +162,10 @@ with col1:
         orientation='h',
         title="Distribución de Noticias por Medio",
         color='medio',
-        color_discrete_sequence=px.colors.qualitative.Prism
+        color_discrete_sequence=px.colors.qualitative.Prism,
+        text='medio'
     )
-    fig_medios.update_layout(showlegend=False, yaxis={'categoryorder':'total ascending'})
+    fig_medios.update_layout(showlegend=False, yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': ''})
     st.plotly_chart(fig_medios, use_container_width=True, theme=None, config={'displayModeBar': False})
 
 with col2:
@@ -221,9 +222,9 @@ fig_timeline = px.scatter(
     size_max=15, # [!] Tamaño reducido de 40 a 15
     opacity=0.7  # [!] Opacidad añadida para distinguir puntos superpuestos
 )
-fig_timeline.update_traces(marker=dict(line=dict(width=1, color='DarkSlateGrey')))
+fig_timeline.update_traces(marker=dict(line=dict(width=1, color='white')))
 fig_timeline.update_layout(
-    xaxis_title="Fecha de Publicación", 
+    xaxis_title="", 
     yaxis_title="",
     plot_bgcolor='white',
     xaxis=dict(showgrid=True, gridcolor='whitesmoke'),
@@ -252,8 +253,8 @@ fig_temas = px.bar(
 fig_temas.update_layout(
     bargap=0.15,
     bargroupgap=0.05,
-    xaxis_title="Medio Emisor",
-    yaxis_title="Porcentaje (%)"
+    xaxis_title="",
+    yaxis_title=""
 )
 st.plotly_chart(fig_temas, use_container_width=True, theme=None, config={'displayModeBar': False})
 
@@ -413,11 +414,11 @@ if 'indice_sentimiento' in df_filtrado.columns and 'emocion_dominante' in df_fil
         color_continuous_scale='RdBu',
         zmin=-1, zmax=1,
         title='Encuadre Temático: Promedio de Sentimiento por Medio y Tema',
-        labels=dict(color="Sentimiento<br>Editorial", x="Temáticas Dominantes", y="Medios de Comunicación"),
+        labels=dict(x="", y="", color=""),
         aspect="auto",
         height=600
     )
-    fig_heatmap.update_layout(
+    fig_heatmap.update_layout(coloraxis_colorbar=dict(thickness=10, title=""),
         plot_bgcolor='white',
         xaxis=dict(tickangle=45, showgrid=True, gridcolor='whitesmoke'),
         yaxis=dict(showgrid=True, gridcolor='whitesmoke')
@@ -498,10 +499,10 @@ if 'indice_sentimiento' in df_filtrado.columns:
                 name=medio_seleccionado
             ))
             
-            fig_agenda.update_layout(
+            fig_agenda.update_layout(coloraxis_colorbar=dict(thickness=10, title=""),
                 title=f"Matriz de Agenda para {medio_seleccionado} (Tamaño=Volumen | Color=Sentimiento)",
-                xaxis_title="Línea de Tiempo Histórica",
-                yaxis_title="Líneas Temáticas Principales",
+                xaxis_title="",
+                yaxis_title="",
                 height=600,
                 plot_bgcolor='white', 
                 xaxis=dict(showgrid=True, gridcolor='lightgray', gridwidth=0.5), 
@@ -576,8 +577,8 @@ if cols_existentes:
         fig_barras.update_layout(
             xaxis={'categoryorder':'total descending'}, 
             plot_bgcolor='white',
-            xaxis_title="Medios de Comunicación",
-            yaxis_title="Volumen de Menciones"
+            xaxis_title="",
+            yaxis_title=""
         )
         st.plotly_chart(fig_barras, use_container_width=True, theme=None, config={'displayModeBar': False})
         
@@ -670,10 +671,10 @@ if not df_tiempo.empty:
                     xgap=2, ygap=2               
                 ))
                 
-                fig_hm.update_layout(
+                fig_hm.update_layout(coloraxis_colorbar=dict(thickness=10, title=""),
                     title=f"Evolución del Encuadre Mensual: <b>{medio_hm}</b><br><sup>(Filtro riguroso: >4 noticias/mes | Tema, Rol, Volumen y Tono)</sup>",
-                    xaxis_title="Línea de Tiempo (Meses)",
-                    yaxis_title="Actor Político",
+                    xaxis_title="",
+                    yaxis_title="",
                     height=1000,        
                     coloraxis=dict(
                         colorscale='RdBu', 
@@ -740,12 +741,12 @@ if cols_existentes_asi:
             text_auto=True, 
             color_continuous_scale='OrRd', 
             title=f'Asimetría de Encuadres: Volumen Total de Hostilidad (N={total_hostil})',
-            labels=dict(color="Volumen de<br>Menciones", x="Actores Políticos", y="Medios de Comunicación"),
+            labels=dict(x="", y="", color=""),
             aspect="auto",
             height=900
         )
         
-        fig_asi.update_layout(
+        fig_asi.update_layout(coloraxis_colorbar=dict(thickness=10, title=""),
             plot_bgcolor='white',
             xaxis=dict(tickangle=45, showgrid=True, gridcolor='whitesmoke'),
             yaxis=dict(showgrid=True, gridcolor='whitesmoke')
@@ -787,8 +788,8 @@ if 'df_melt_cand' in locals() and not df_melt_cand.empty:
             plot_bgcolor='white',
             xaxis=dict(showgrid=True, gridcolor='whitesmoke'),
             yaxis=dict(showgrid=True, gridcolor='whitesmoke'),
-            xaxis_title="Línea de Tiempo",
-            yaxis_title="Promedio Móvil de Ataques (7 días)"
+            xaxis_title="",
+            yaxis_title=""
         )
         st.plotly_chart(fig_sma, use_container_width=True, theme=None, config={'displayModeBar': False})
     else:
@@ -893,8 +894,8 @@ if 'indice_sentimiento' in df_filtrado.columns:
                 
                 fig_alianzas.update_layout(
                     title=f"Evolución de Mega-Alianzas<br><sup>Tema: <b>{opcion_corta}</b> (Tamaño = Días Coordinados | Color = Sentimiento -1 a +1)</sup>",
-                    xaxis_title="Línea de Tiempo (Meses)",
-                    yaxis_title="Coaliciones Editoriales Exactas",
+                    xaxis_title="",
+                    yaxis_title="",
                     yaxis=dict(categoryorder='array', categoryarray=orden_y, showgrid=True, gridcolor='white'),
                     height=800,
                     margin=dict(l=400, r=50, t=100, b=50), 
@@ -1011,7 +1012,7 @@ if cols_existentes_causal:
 
         fig_time.update_layout(
             title=f"El Efecto Dominó (Línea de Tiempo Causal)<br><sup>Objetivo Específico: <b>{cand_efecto}</b></sup>",
-            xaxis_title="Línea de Tiempo Continua (Semanas)",
+            xaxis_title="",
             height=550,
             plot_bgcolor='white',
             hovermode="x unified",
@@ -1132,8 +1133,8 @@ if cols_existentes_logit and 'prob_NEG' in df_analisis.columns and 'prob_fear' i
             plot_bgcolor='white', 
             height=600,
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
-            xaxis_title="Nivel de Sentimiento Negativo (Semana T-1)",
-            yaxis_title="Probabilidad de Ataque Directo (Semana T)",
+            xaxis_title="",
+            yaxis_title="",
             xaxis=dict(showgrid=True, gridcolor='whitesmoke'),
             yaxis=dict(tickformat=".0%", range=[-0.05, 1.05], showgrid=True, gridcolor='whitesmoke', tickvals=[0, 0.25, 0.5, 0.75, 1])
         )
