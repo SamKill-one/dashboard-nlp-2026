@@ -422,6 +422,18 @@ if 'indice_sentimiento' in df_filtrado.columns and 'emocion_dominante' in df_fil
     # 2. Construcción de la matriz de encuadre
     df_enc = df_filtrado.groupby(['medio_emisor', 'tema_dominante'])['indice_sentimiento'].mean().reset_index()
     matriz_enc = df_enc.pivot(index='medio_emisor', columns='tema_dominante', values='indice_sentimiento').fillna(0)
+    
+    dic_temas_ext = {
+        'Paz Total': 'PT',
+        'Institucional': 'Ins',
+        'Transición Energética y Medio Ambiente': 'TE',
+        'Economía y Reformas': 'Eco',
+        'Corrupción y Escándalos': 'Cor',
+        'Campañas Electorales y Partidos Políticos': 'Camp',
+        'Justicia y Derechos Humanos': 'Just',
+        'Orden Público y Seguridad': 'Seg'
+    }
+    matriz_enc.columns = [dic_temas_ext.get(c, str(c)[:10]+'...') for c in matriz_enc.columns]
 
     # 3. Renderizado del Mapa de Calor
     st.markdown("El siguiente **Mapa de Calor** visualiza el cruce entre los medios de comunicación y los temas dominantes. El tono y la intensidad del color de cada celda reflejan el encuadre promedio de las noticias, donde el número interno corresponde directamente al índice de sentimiento. Guiándose por la barra cromática de la derecha, esta matriz permite identificar rápidamente de un solo vistazo si la cobertura de un medio frente a un tema específico es marcadamente **hostil (rojo)**, **neutral (blanco)** o **favorable (azul)**.")
@@ -438,10 +450,15 @@ if 'indice_sentimiento' in df_filtrado.columns and 'emocion_dominante' in df_fil
     )
     fig_heatmap.update_layout(coloraxis_colorbar=dict(thickness=10, title=""),
         plot_bgcolor='white',
-        xaxis=dict(tickangle=45, showgrid=True, gridcolor='whitesmoke'),
+        xaxis=dict(tickangle=0, showgrid=True, gridcolor='whitesmoke'),
         yaxis=dict(showgrid=True, gridcolor='whitesmoke')
     )
     st.plotly_chart(fig_heatmap, use_container_width=True, theme=None, config={'displayModeBar': False})
+    
+    st.markdown("""
+    **Glosario de Temas:** 
+    **PT** (Paz Total), **Ins** (Institucional), **TE** (Transición Energética), **Eco** (Economía y Reformas), **Cor** (Corrupción y Escándalos), **Camp** (Campañas Electorales), **Just** (Justicia y DDHH), **Seg** (Orden Público y Seguridad).
+    """)
 else:
     st.info("No se encontraron las columnas necesarias (indice_sentimiento, emocion_dominante) para el mapa de calor.")
 
@@ -481,8 +498,28 @@ if 'indice_sentimiento' in df_filtrado.columns:
             top_temas = tema_vol.nlargest(8, 'volumen_noticias')['tema_dominante'].tolist()
             
             df_top = df_medio[df_medio['tema_dominante'].isin(top_temas)].copy()
-            df_top['tema_dominante'] = pd.Categorical(df_top['tema_dominante'], categories=top_temas[::-1], ordered=True)
-            df_top = df_top.sort_values(['tema_dominante', 'fecha_dia'])
+            
+            dic_temas_agenda = {
+                'Paz Total': 'PT',
+                'Institucional': 'Ins',
+                'Transición Energética y Medio Ambiente': 'TE',
+                'Economía y Reformas': 'Eco',
+                'Corrupción y Escándalos': 'Cor',
+                'Campañas Electorales y Partidos Políticos': 'Camp',
+                'Justicia y Derechos Humanos': 'Just',
+                'Orden Público y Seguridad': 'Segu',
+                'Relaciones Internacionales': 'Inter.'
+            }
+            
+            # Map the actual column directly first
+            df_top['tema_abrev'] = df_top['tema_dominante'].apply(lambda x: dic_temas_agenda.get(x, str(x)[:10]+"."))
+            
+            # Get the abbreviated top_temas for category order
+            top_temas_abrev = [dic_temas_agenda.get(t, str(t)[:10]+".") for t in top_temas]
+            
+            df_top['tema_abrev'] = pd.Categorical(df_top['tema_abrev'], categories=top_temas_abrev[::-1], ordered=True)
+            
+            df_top = df_top.sort_values(['tema_abrev', 'fecha_dia'])
             
             max_vol = df_top['volumen_noticias'].max()
             ref = 2. * max_vol / (50.**2) if max_vol > 0 else 1
@@ -491,6 +528,7 @@ if 'indice_sentimiento' in df_filtrado.columns:
             
             hover_texts = []
             for _, row in df_top.iterrows():
+                # Recover original name for hover if possible, but abbreviated is fine too
                 txt = (
                     f"<b>{row['medio_emisor']}</b><br>"
                     f"📅 Fecha: {str(row['fecha_dia'])[:10]}<br>"
@@ -503,7 +541,7 @@ if 'indice_sentimiento' in df_filtrado.columns:
             
             fig_agenda.add_trace(go.Scatter(
                 x=pd.to_datetime(df_top['fecha_dia']),
-                y=df_top['tema_dominante'].astype(str).tolist(),
+                y=df_top['tema_abrev'].astype(str).tolist(),
                 mode='markers',
                 text=hover_texts,
                 hoverinfo='text',
@@ -529,6 +567,10 @@ if 'indice_sentimiento' in df_filtrado.columns:
                 margin=dict(l=0, r=0, t=60, b=0)
             )
             st.plotly_chart(fig_agenda, use_container_width=True, theme=None, config={'displayModeBar': False})
+            st.markdown("""
+            **Glosario de Temas:** 
+            **PT** (Paz Total), **Ins** (Institucional), **TE** (Transición Energética), **Eco** (Economía y Reformas), **Cor** (Corrupción y Escándalos), **Camp** (Campañas Electorales), **Just** (Justicia y DDHH), **Segu** (Orden Público y Seguridad), **Inter.** (Relaciones Internacionales).
+            """)
 else:
     st.info("Faltan columnas de sentimiento para la matriz de agenda.")
 
@@ -631,10 +673,31 @@ else:
     st.error("No se encontraron columnas de sesgo de candidatos en el dataset.")
 
 # ==============================================================================
+# Módulo 4: Asimetría de Encuadres y Hostilidad
+# ==============================================================================
+st.header("Módulo 4: Asimetría de Encuadres y Hostilidad")
+
+st.subheader("Resumen de Encuadres Mapeados")
+st.markdown("""
+**Guía Metodológica de Hostilidad:**
+
+**Culpabilidad Activa**: Sentimiento Negativo + Rol de Sujeto Activo. El artículo posee carga tóxica y el actor político es el ejecutor de la acción.
+
+**Victimización**: Sentimiento Negativo + Rol de Sujeto Pasivo. Carga tóxica donde el actor político es el receptor de la acción.
+
+**Contexto Adverso**: Sentimiento altamente negativo (Probabilidad > 70%) + Rol Sintáctico Desconocido. Mención del político dentro de un entorno crítico o de extrema negatividad, generando una asociación perjudicial implícita.
+""")
+
+# ==============================================================================
 # Mapa de Calor Cruzado: Medios vs Candidatos vs Encuadres
 # ==============================================================================
 st.subheader("Mapa de Calor Evolutivo")
-st.markdown("Evolución del índice de polaridad (escala de +1 a -1) durante los seis meses de estudio. Revela el tema dominante asociado al candidato y el volumen de noticias, filtrando exclusivamente las relaciones con más de 4 publicaciones mensuales.")
+st.markdown("""Evolución del índice de polaridad (escala de +1 a -1) durante los seis meses de estudio. Revela el tema dominante asociado al candidato y el volumen de noticias, filtrando exclusivamente las relaciones con más de 4 publicaciones mensuales.
+
+**Glosario de Abreviaturas del Mapa:**
+* **Temas**: **PT** (Paz Total), **Ins** (Institucional), **TE** (Transición Energética), **Eco** (Economía y Reformas), **Cor** (Corrupción).
+* **Encuadres**: **CA** (Culpabilidad Activa), **Vic** (Victimización), **CAd** (Contexto Adverso), **Ind** (Indeterminado).
+""")
 
 df_tiempo = df_filtrado.copy()
 if not df_tiempo.empty:
@@ -683,8 +746,29 @@ if not df_tiempo.empty:
             encuadre_principal = moda_encuadre.iloc[0] if not moda_encuadre.empty else 'Sin Rol Fijo'
             
             sentimiento_prom = df_tema_ganador['Sentimiento'].mean()
-            tema_corto = textwrap.shorten(tema_principal, width=20, placeholder="...")
-            texto_celda = f"<b>T:</b> {tema_corto}<br><b>E:</b> {encuadre_principal}<br>(n={volumen_real})<br>[{sentimiento_prom:+.2f}]"
+            
+            # Abreviaturas extremas para temas
+            dic_temas_ext = {
+                'Paz Total': 'PT',
+                'Institucional': 'Ins',
+                'Transición Energética y Medio Ambiente': 'TE',
+                'Economía y Reformas': 'Eco',
+                'Corrupción y Escándalos': 'Cor'
+            }
+            tema_abrev = dic_temas_ext.get(tema_principal, textwrap.shorten(tema_principal, width=4, placeholder=""))
+            
+            # Abreviaturas extremas para encuadres
+            dic_enc_ext = {
+                'Indeterminado': 'Ind',
+                'Culpabilidad activa': 'CA',
+                'Culpabilidad Activa': 'CA',
+                'Victimización': 'Vic',
+                'Contexto Adverso': 'CAd'
+            }
+            encuadre_str = str(encuadre_principal)
+            encuadre_abrev = dic_enc_ext.get(encuadre_str, textwrap.shorten(encuadre_str, width=3, placeholder=""))
+                
+            texto_celda = f"<b>{tema_abrev}</b><br>{encuadre_abrev}<br><sub>n={volumen_real} | {sentimiento_prom:+.2f}</sub>"
             
             return pd.Series({'Sentimiento_Promedio': sentimiento_prom, 'Texto_Anotacion': texto_celda})
 
@@ -703,29 +787,32 @@ if not df_tiempo.empty:
                 matriz_z = df_m.pivot(index='Candidato', columns='Mes', values='Sentimiento_Promedio').reindex(index=candidatos_unicos_hm, columns=meses_unicos_hm)
                 matriz_text = df_m.pivot(index='Candidato', columns='Mes', values='Texto_Anotacion').reindex(index=candidatos_unicos_hm, columns=meses_unicos_hm).fillna('')
                 
+                meses_espanol = {'01': 'Ene', '02': 'Feb', '03': 'Mar', '04': 'Abr', '05': 'May', '06': 'Jun', '07': 'Jul', '08': 'Ago', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dic'}
+                x_labels_hm = [f"<b>{meses_espanol[m.split('-')[1]]}</b>" for m in meses_unicos_hm]
+
                 fig_hm = go.Figure(data=go.Heatmap(
                     z=matriz_z.values,
-                    x=meses_unicos_hm,
-                    y=[cand.replace(' ', '<br>') for cand in candidatos_unicos_hm],
+                    x=x_labels_hm,
+                    y=[f"<b>{cand.replace(' ', '<br>')}</b>" for cand in candidatos_unicos_hm],
                     text=matriz_text.values,
                     texttemplate="%{text}",      
                     hoverinfo="text",            
                     coloraxis="coloraxis",       
-                    xgap=2, ygap=2               
+                    xgap=2, ygap=2,
+                    textfont=dict(size=11)
                 ))
                 
                 fig_hm.update_layout(
                     title=f"Evolución del Encuadre Mensual: <b>{medio_hm}</b><br><sup>(Filtro riguroso: >4 noticias/mes | Tema, Rol, Volumen y Tono)</sup>",
                     xaxis_title="",
                     yaxis_title="",
-                    height=1000,        
+                    height=600,        
                     coloraxis=dict(
                         colorscale='RdBu', 
                         cmin=-1, cmax=1, 
                         colorbar=dict(title="", thickness=10)
                     ),
-                    plot_bgcolor='white',
-                    font=dict(size=10)
+                    plot_bgcolor='white'
                 )
                 
                 st.plotly_chart(fig_hm, use_container_width=True, theme=None, config={'displayModeBar': False})
@@ -733,22 +820,6 @@ if not df_tiempo.empty:
                 st.info("No hay datos suficientes (que pasen el filtro de volumen) para este medio.")
     else:
          st.warning("No se encontraron columnas de sentimiento de candidatos.")
-
-# ==============================================================================
-# Módulo 4: Asimetría de Encuadres y Hostilidad
-# ==============================================================================
-st.header("Módulo 4: Asimetría de Encuadres y Hostilidad")
-
-st.subheader("Resumen de Encuadres Mapeados")
-st.markdown("""
-**Guía Metodológica de Hostilidad:**
-
-**Culpabilidad Activa**: Sentimiento Negativo + Rol de Sujeto Activo. El artículo posee carga tóxica y el actor político es el ejecutor de la acción.
-
-**Victimización**: Sentimiento Negativo + Rol de Sujeto Pasivo. Carga tóxica donde el actor político es el receptor de la acción.
-
-**Contexto Adverso**: Sentimiento altamente negativo (Probabilidad > 70%) + Rol Sintáctico Desconocido. Mención del político dentro de un entorno crítico o de extrema negatividad, generando una asociación perjudicial implícita.
-""")
 
 # ==============================================================================
 # Asimetría de Encuadres (Culpabilidad, Victimización y Ataque)
