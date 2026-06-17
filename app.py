@@ -209,7 +209,13 @@ with col2:
 # Línea de Tiempo de Cobertura Diaria
 # ==========================================
 st.subheader("Línea de Tiempo de Cobertura Diaria")
-st.markdown("Auditoría visual de la continuidad en la recolección de datos, identificando los días con publicaciones efectivas y posibles vacíos de información.")
+st.markdown("""
+**Auditoría visual de la continuidad en la recolección de datos.**  
+Esta gráfica tiene la intención de visibilizar el volumen de extracción de noticias diarias y monitorear la constancia del algoritmo.  
+* **Círculo pequeño**: Representa que se extrajo 1 sola noticia en esa fecha.  
+* **Círculo grande**: Representa que se extrajeron 2 o más noticias en esa fecha.  
+* **Ausencia de círculo**: Significa que existe un vacío de información; en ese día específico no se logró extraer ninguna noticia de dicho medio.
+""")
 # Agrupar por fecha y medio_emisor para obtener el volumen diario
 df_timeline = df_filtrado.groupby(['fecha_dia', 'medio_emisor']).size().reset_index(name='cantidad')
 
@@ -231,8 +237,8 @@ fig_timeline.update_layout(
     xaxis_title="", 
     yaxis_title="",
     plot_bgcolor='white',
-    xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black'),
-    yaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black', showticklabels=False),
+    xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=True, gridcolor='whitesmoke', ticks='inside', ticklen=8, tickcolor='black'),
+    yaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=True, gridcolor='whitesmoke', ticks='inside', ticklen=8, tickcolor='black', showticklabels=False),
     legend_title_text="",
     height=350,
     margin=dict(t=40, b=0, l=0, r=0)
@@ -450,7 +456,7 @@ if 'indice_sentimiento' in df_filtrado.columns and 'emocion_dominante' in df_fil
     )
     fig_heatmap.update_layout(coloraxis_colorbar=dict(thickness=10, title=""),
         plot_bgcolor='white',
-        xaxis=dict(tickangle=0, showgrid=True, gridcolor='whitesmoke'),
+        xaxis=dict(tickangle=-45, showgrid=True, gridcolor='whitesmoke'),
         yaxis=dict(showgrid=True, gridcolor='whitesmoke')
     )
     st.plotly_chart(fig_heatmap, use_container_width=True, theme=None, config={'displayModeBar': False})
@@ -567,10 +573,6 @@ if 'indice_sentimiento' in df_filtrado.columns:
                 margin=dict(l=0, r=0, t=60, b=0)
             )
             st.plotly_chart(fig_agenda, use_container_width=True, theme=None, config={'displayModeBar': False})
-            st.markdown("""
-            **Glosario de Temas:** 
-            **PT** (Paz Total), **Ins** (Institucional), **TE** (Transición Energética), **Eco** (Economía y Reformas), **Cor** (Corrupción y Escándalos), **Camp** (Campañas Electorales), **Just** (Justicia y DDHH), **Segu** (Orden Público y Seguridad), **Inter.** (Relaciones Internacionales).
-            """)
 else:
     st.info("Faltan columnas de sentimiento para la matriz de agenda.")
 
@@ -686,6 +688,8 @@ st.markdown("""
 **Victimización**: Sentimiento Negativo + Rol de Sujeto Pasivo. Carga tóxica donde el actor político es el receptor de la acción.
 
 **Contexto Adverso**: Sentimiento altamente negativo (Probabilidad > 70%) + Rol Sintáctico Desconocido. Mención del político dentro de un entorno crítico o de extrema negatividad, generando una asociación perjudicial implícita.
+
+**Indeterminado**: Sentimiento Neutral o Mixto + Rol Sintáctico Ambiguo. El artículo menciona al actor político en un contexto descriptivo o meramente informativo, sin asignarle una carga hostil clara ni un rol de agresor o víctima definido.
 """)
 
 # ==============================================================================
@@ -693,10 +697,6 @@ st.markdown("""
 # ==============================================================================
 st.subheader("Mapa de Calor Evolutivo")
 st.markdown("""Evolución del índice de polaridad (escala de +1 a -1) durante los seis meses de estudio. Revela el tema dominante asociado al candidato y el volumen de noticias, filtrando exclusivamente las relaciones con más de 4 publicaciones mensuales.
-
-**Glosario de Abreviaturas del Mapa:**
-* **Temas**: **PT** (Paz Total), **Ins** (Institucional), **TE** (Transición Energética), **Eco** (Economía y Reformas), **Cor** (Corrupción).
-* **Encuadres**: **CA** (Culpabilidad Activa), **Vic** (Victimización), **CAd** (Contexto Adverso), **Ind** (Indeterminado).
 """)
 
 df_tiempo = df_filtrado.copy()
@@ -812,10 +812,18 @@ if not df_tiempo.empty:
                         cmin=-1, cmax=1, 
                         colorbar=dict(title="", thickness=10)
                     ),
-                    plot_bgcolor='white'
+                    plot_bgcolor='white',
+                    xaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
+                    yaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8)
                 )
                 
                 st.plotly_chart(fig_hm, use_container_width=True, theme=None, config={'displayModeBar': False})
+                
+                st.markdown("""
+**Glosario de Abreviaturas:**
+* **Temas**: **PT** (Paz Total), **Ins** (Institucional), **TE** (Transición Energética), **Eco** (Economía y Reformas), **Cor** (Corrupción y Escándalos).
+* **Encuadres**: **CA** (Culpabilidad Activa), **Vic** (Victimización), **CAd** (Contexto Adverso), **Ind** (Indeterminado).
+""")
             else:
                 st.info("No hay datos suficientes (que pasen el filtro de volumen) para este medio.")
     else:
@@ -879,8 +887,11 @@ else:
 # ==============================================================================
 # Macro Tendencias de Encuadres Hostiles (SMA 7)
 # ==============================================================================
-st.subheader("Datos Exactos y Promedios")
-st.markdown("Promedio temporal de encuadres de ataque emitidos por los medios hacia los distintos actores políticos.")
+st.subheader("Macrotendencias: Promedio Móvil de 7 Días")
+st.markdown("""
+**¿Por qué usar un Promedio Móvil (SMA-7)?**  
+El volumen diario de noticias puede ser muy caótico y ruidoso. Esta gráfica suaviza esas fluctuaciones calculando el promedio consecutivo de los últimos 7 días. Esto nos permite observar de forma limpia las "olas" de ataques mediáticos a lo largo de todos los meses de estudio. Un pico sostenido en el tiempo revela verdaderas campañas, coyunturas de alta presión o escándalos continuos contra un actor político.
+""")
 
 if 'df_melt_cand' in locals() and not df_melt_cand.empty:
     ataques_keywords = ['culpabilidad activa', 'victimización', 'victimizacion']
@@ -895,15 +906,16 @@ if 'df_melt_cand' in locals() and not df_melt_cand.empty:
             x='fecha_dia', 
             y='sma_7', 
             color='candidato', 
-            title='Macro Tendencias: Promedio Móvil (7 días) de Encuadres de Ataque', 
+            title='<b>Macro Tendencias: Promedio Móvil (7 días) de Encuadres de Ataque</b>', 
             height=600
         )
         fig_sma.update_layout(
             plot_bgcolor='white',
-            xaxis=dict(showgrid=True, gridcolor='whitesmoke'),
-            yaxis=dict(showgrid=True, gridcolor='whitesmoke'),
+            xaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, type='date', dtick="M1", tickformat="%b"),
+            yaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
             xaxis_title="",
-            yaxis_title=""
+            yaxis_title="Promedio de Noticias (SMA-7)",
+            legend_title_text=""
         )
         st.plotly_chart(fig_sma, use_container_width=True, theme=None, config={'displayModeBar': False})
     else:
@@ -936,7 +948,7 @@ if 'indice_sentimiento' in df_filtrado.columns:
             n_medios = len(medios_dia)
             if n_medios >= 2:
                 avg_sent = grupo['indice_sentimiento'].mean()
-                nombre_alianza = " + ".join(medios_dia)
+                nombre_alianza = "<br>+ ".join(medios_dia)
                 alianzas_maximas.append({
                     'Mes': mes, 
                     'Coalicion': nombre_alianza, 
@@ -984,9 +996,12 @@ if 'indice_sentimiento' in df_filtrado.columns:
                     )
                     hover_texts.append(txt)
 
+                meses_espanol = {'01': 'Ene', '02': 'Feb', '03': 'Mar', '04': 'Abr', '05': 'May', '06': 'Jun', '07': 'Jul', '08': 'Ago', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dic'}
+                df_agrup_alianzas['Mes_Corto'] = df_agrup_alianzas['Mes'].apply(lambda m: meses_espanol.get(m.split('-')[1], m))
+
                 fig_alianzas = go.Figure()
                 fig_alianzas.add_trace(go.Scatter(
-                    x=df_agrup_alianzas['Mes'],
+                    x=df_agrup_alianzas['Mes_Corto'],
                     y=df_agrup_alianzas['Coalicion'],
                     mode='markers+text',
                     text=df_agrup_alianzas['dias_sync'], 
@@ -1010,12 +1025,12 @@ if 'indice_sentimiento' in df_filtrado.columns:
                     title=f"Evolución de Mega-Alianzas<br><sup>Tema: <b>{opcion_corta}</b> (Tamaño = Días Coordinados | Color = Sentimiento -1 a +1)</sup>",
                     xaxis_title="",
                     yaxis_title="",
-                    yaxis=dict(categoryorder='array', categoryarray=orden_y, showgrid=True, gridcolor='white'),
+                    yaxis=dict(categoryorder='array', categoryarray=orden_y, showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
                     height=800,
-                    margin=dict(l=400, r=50, t=100, b=50), 
-                    plot_bgcolor='#fafafa', 
-                    xaxis=dict(showgrid=True, gridcolor='white', tickangle=45),
-                    coloraxis=dict(colorscale='RdBu', cmin=-1, cmax=1, colorbar=dict(title="Sentimiento<br>Editorial"))
+                    margin=dict(l=150, r=50, t=100, b=50), 
+                    plot_bgcolor='white', 
+                    xaxis=dict(showgrid=True, gridcolor='whitesmoke', tickangle=0, showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
+                    coloraxis=dict(colorscale='RdBu', cmin=-1, cmax=1, colorbar=dict(title=""))
                 )
                 st.plotly_chart(fig_alianzas, use_container_width=True, theme=None, config={'displayModeBar': False})
             else:
