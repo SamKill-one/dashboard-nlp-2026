@@ -161,13 +161,13 @@ with col1:
         x='cantidad', 
         y='medio', 
         orientation='h',
-        title="Distribución de Noticias por Medio",
+        title="<b>Distribución de Noticias por Medio</b>",
         color='medio',
         color_discrete_sequence=px.colors.qualitative.Prism,
         text='medio'
     )
     fig_medios.update_traces(texttemplate='<b>%{text}</b>', textposition='auto', insidetextanchor='middle', textfont=dict(size=14))
-    fig_medios.update_layout(showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
+    fig_medios.update_layout(plot_bgcolor='white', showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
     st.plotly_chart(fig_medios, use_container_width=True, theme=None, config={'displayModeBar': False})
 
 with col2:
@@ -192,13 +192,13 @@ with col2:
                 x='cantidad', 
                 y='autor', 
                 orientation='h',
-                title=f"Top 10 Autores ({medio_autor})",
+                title=f"<b>Top 10 Autores ({medio_autor})</b>",
                 color='autor',
                 color_discrete_sequence=px.colors.qualitative.Vivid,
                 text='autor'
             )
             fig_autores.update_traces(texttemplate='<b>%{text}</b>', textposition='auto', insidetextanchor='middle', textfont=dict(size=14))
-            fig_autores.update_layout(showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
+            fig_autores.update_layout(plot_bgcolor='white', showlegend=False, xaxis=dict(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black'), yaxis={'categoryorder':'total ascending', 'showticklabels': False, 'title': '', 'showline': True, 'linewidth': 1, 'linecolor': 'black'})
             st.plotly_chart(fig_autores, use_container_width=True, theme=None, config={'displayModeBar': False})
         else:
             st.info("No hay autores registrados para este medio.")
@@ -253,19 +253,20 @@ fig_temas = px.bar(
     x='medio_emisor', 
     y='porcentaje', 
     color='tema_dominante', 
-    title='<b>Distribución Temática Proporcional (%)</b>', 
+    title='', 
     barmode='group',
     height=450
 )
 fig_temas.for_each_trace(lambda t: t.update(name=f"<b>{t.name}</b>"))
 fig_temas.update_layout(
+    plot_bgcolor='white',
     bargap=0.15,
     bargroupgap=0.05,
     xaxis_title="",
     yaxis_title="",
     legend_title_text="",
     legend=dict(orientation="h", xanchor="center", x=0.5),
-    margin=dict(l=0, r=0, t=60, b=40)
+    margin=dict(l=0, r=0, t=20, b=40)
 )
 fig_temas.update_xaxes(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black')
 fig_temas.update_yaxes(showline=True, linewidth=1, linecolor='black', showgrid=False, ticks='inside', ticklen=8, tickcolor='black')
@@ -393,6 +394,7 @@ if 'prob_POS' in df_filtrado.columns and 'prob_NEG' in df_filtrado.columns and '
         textfont=dict(color=t.marker.color)
     ))
     fig_sentiments.update_layout(
+        plot_bgcolor='white',
         xaxis_title="", 
         yaxis_title="",
         legend_title_text="",
@@ -604,7 +606,7 @@ if cols_existentes:
             x='medio_emisor',      
             y='menciones', 
             color='candidato',     
-            title='<b>Perfil Editorial: Volumen de Cobertura</b>',
+            title='',
             text_auto=True,
             barmode='group',       
             height=500
