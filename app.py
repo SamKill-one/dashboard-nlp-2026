@@ -24,15 +24,18 @@ st.markdown("## Estudio Cuantitativo de Agenda-Setting: Aplicación de Procesami
 
 with st.expander("METODOLOGÍA DEL ESTUDIO", expanded=False):
     st.markdown("""
-    La presente plataforma web expone los resultados de un análisis computacional aplicado a la cobertura política de los medios de comunicación en Colombia, correspondiente al periodo de enero a principios de junio de 2026. El objetivo es cuantificar las dinámicas de Agenda-Setting y perfilamiento editorial mediante técnicas de Ciencia de Datos y Procesamiento de Lenguaje Natural (NLP). El estudio se desarrolló a través del siguiente proceso metodológico:
+    La presente plataforma web expone los resultados de un análisis computacional aplicado a la cobertura política de los 6 medios de comunicación mas masivos en Colombia, correspondiente al periodo de enero a principios de junio de 2026. El objetivo es cuantificar las dinámicas de Agenda-Setting y perfilamiento editorial mediante técnicas de Ciencia de Datos y Procesamiento de Lenguaje Natural (NLP). El estudio se desarrolló a través del siguiente proceso metodológico:
 
-    1. **Extracción y Estructuración:** Recopilación mediante web scraping de un corpus representativo, recolectando entre una y dos noticias diarias de los seis medios masivos principales de Colombia.
+    1. **Filtro Selectivo y Extracción (Web Scraping):** Los medios publican cientos de artículos diarios sobre múltiples temas. Para aislar exclusivamente el segmento de interés, el algoritmo de recolección se dirigió primordialmente a las secciones web catalogadas como "Política" o "Nación". Posteriormente, este barrido se cruzó bajo una regla estricta: solo se extrajeron las noticias cuyo titular o enlace URL contuviera explícitamente el nombre, apellido o mención directa de alguno de los 7 actores políticos más relevantes de la politica y /o campaña electoral. Esto permitió descartar por completo el ruido y garantizar una muestra diaria de 1 a 2 noticias 100% enfocadas en la agenda de poder.
 
-    2. **Preprocesamiento de Texto:** Purga de ruido estructural (avisos legales, menús) y limpieza lingüística para aislar el contenido periodístico de valor.
+    2. **Preprocesamiento de Texto:** Purga de ruido estructural (avisos legales, menús de navegación, publicidad incrustada) y limpieza lingüística para aislar el contenido periodístico de valor.
 
-    3. **Clasificación mediante Deep Learning:** Aplicación de modelos Transformers (RoBERTa / DeBERTa) para cuantificar la probabilidad de sentimiento negativo y categorizar el encuadre discursivo.
+    3. **Procesamiento de Lenguaje Natural (NLP):** El análisis del corpus extraído se fundamentó en la orquestación secuencial de tres arquitecturas de ML, ejecutadas en el siguiente orden:
+       * **Modelado Temático (Zero-Shot Inference):** En primer lugar, para descubrir el tema central del que hablaban las noticias, se empleó un modelo de inferencia respaldado por un glosario semántico. Este diccionario encapsuló todos los términos referentes a los 7 temas relevantes de la política en Colombia, permitiendo una categorización inicial automatizada.
+       * **Análisis Sintáctico (spaCy):** En segundo lugar, se utilizó este modelo para el análisis morfosintáctico de las oraciones. Permitió leer la sintaxis de las noticias y desglosar las frases para determinar si los actores políticos fungían como sujetos activos (ejecutores) o pasivos (receptores) dentro del texto.
+       * **Análisis Semántico (RoBERTa):** Finalmente, se implementó este modelo Transformer para evaluar la semántica profunda de las noticias clasificadas y determinar su polaridad, definiendo de forma objetiva si el encuadre era negativo, neutro o positivo.
 
-    4. **Modelado Estadístico:** Agrupación en series de tiempo y aplicación de modelos predictivos para identificar correlaciones causales.
+    4. **Modelado Estadístico y Visualización Analítica:** Tras la transformación matemática del texto procesado en matrices ortogonales de datos, se ejecutó un Análisis Exploratorio (EDA). Esta fase se materializó en una interfaz visual interactiva que despliega: mapas de calor cruzados, proyecciones de asimetría de encuadre (positivo/negativo) y visualizaciones longitudinales (series de tiempo) para monitorear la evolución de la hostilidad cronológicamente. Finalmente, se aplicaron modelos predictivos (regresiones logísticas) para cuantificar probabilísticamente las correlaciones causales y el efecto dominó en las narrativas mediáticas.
     """)
 
 @st.cache_data
@@ -1292,3 +1295,25 @@ if cols_existentes_logit and 'prob_NEG' in df_analisis.columns and 'prob_fear' i
         st.info("No hay suficientes datos limpios para ejecutar la regresión logística.")
 else:
     st.error("No se detectaron las columnas necesarias (prob_NEG, prob_fear o sesgo) para calcular el efecto gatillo.")
+
+# ==============================================================================
+# Footer Institucional
+# ==============================================================================
+st.markdown("""
+<div style='text-align: center; color: #4F4F4F; font-size: 0.95em; font-family: sans-serif; padding: 40px 0; border-top: 1px solid #EAEAEA; margin-top: 50px;'>
+    <p style='margin-bottom: 5px;'>Los datos presentados en este observatorio fueron extraídos, procesados y analizados directamente de los 6 medios masivos de comunicación mencionados a lo largo del reporte.</p>
+    <p style='margin-bottom: 25px;'>Este trabajo de investigación y desarrollo tecnológico fue realizado por el <b>Laboratorio Comunitarios de Ciencia y Tecnología</b>, ubicado en la ciudad de Popayán.</p>
+    <div style='display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;'>
+        <span style='font-weight: 600; color: #333333;'>Autor e Investigador: Ing. Sami Yamid Morocho Rengifo</span>
+        <span style='color: #cccccc;'>|</span>
+        <a href='mailto:samiyreng@gmail.com' style='color: #4F4F4F; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.2s;' onMouseOver="this.style.color='#000'" onMouseOut="this.style.color='#4F4F4F'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            samiyreng@gmail.com
+        </a>
+        <a href='https://www.linkedin.com/in/samiymororeng' target='_blank' style='color: #4F4F4F; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.2s;' onMouseOver="this.style.color='#0077b5'" onMouseOut="this.style.color='#4F4F4F'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+            LinkedIn
+        </a>
+    </div>
+</div>
+""", unsafe_allow_html=True)
