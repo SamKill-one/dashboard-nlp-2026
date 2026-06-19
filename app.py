@@ -417,6 +417,10 @@ if 'prob_POS' in df_filtrado.columns and 'prob_NEG' in df_filtrado.columns and '
         margin=dict(l=0, r=0, t=80, b=0)
     )
     st.plotly_chart(fig_sentiments, use_container_width=True, theme=None, config={'displayModeBar': False})
+
+    st.info("""**Reconceptualización de la Neutralidad (El Mito de la Objetividad):**
+    En la escala XLM-RoBERTa aplicada, el valor 0 (Blanco) no representa un estado de "objetividad pura" o ausencia total de postura, puesto que el filtro humano y editorial es estadísticamente inevitable. En el contexto de este estudio computacional, el valor 0 indica una Estructura Descriptiva de Baja Tensión o "Neutralidad Aparente"; es decir, artículos donde el medio logró despojar el texto de marcadores semánticos emocionales o de lenguaje altamente cargado, presentando los hechos de manera sintácticamente aséptica, independientemente de la intencionalidad oculta en la selección de la agenda (Agenda-Setting).""")
+
 else:
     st.info("No se encontraron columnas de probabilidad de sentimiento en el dataset.")
 
@@ -430,7 +434,7 @@ if 'indice_sentimiento' in df_filtrado.columns and 'emocion_dominante' in df_fil
     import numpy as np
     condicion_disonancia = (df_filtrado['prob_NEG'] >= 0.65) & (df_filtrado['emocion_dominante'] == 'Felicidad/Joy')
     df_filtrado['Firma_Emocional_Ajustada'] = np.where(condicion_disonancia, 'Sarcasmo / Alegría Maliciosa', df_filtrado['emocion_dominante'])
-    st.caption("Nota: En la base de datos no se detectaron ni imputaron casos de sarcasmo.")
+
 
     # 2. Construcción de la matriz de encuadre
     df_enc = df_filtrado.groupby(['medio_emisor', 'tema_dominante'])['indice_sentimiento'].mean().reset_index()
@@ -822,9 +826,6 @@ st.markdown("""
 st.subheader("Mapa de Calor Evolutivo")
 st.markdown("""Evolución del índice de polaridad (escala de +1 a -1) durante los seis meses de estudio. Revela el tema dominante asociado al actor político y el volumen de noticias, filtrando exclusivamente las relaciones con más de 4 publicaciones mensuales.
 """)
-
-st.info("""**Reconceptualización de la Neutralidad (El Mito de la Objetividad):**
-En la escala XLM-RoBERTa aplicada, el valor 0 (Blanco) no representa un estado de "objetividad pura" o ausencia total de postura, puesto que el filtro humano y editorial es estadísticamente inevitable. En el contexto de este estudio computacional, el valor 0 indica una Estructura Descriptiva de Baja Tensión o "Neutralidad Aparente"; es decir, artículos donde el medio logró despojar el texto de marcadores semánticos emocionales o de lenguaje altamente cargado, presentando los hechos de manera sintácticamente aséptica, independientemente de la intencionalidad oculta en la selección de la agenda (Agenda-Setting).""")
 
 df_tiempo = df_filtrado.copy()
 if not df_tiempo.empty:
