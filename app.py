@@ -22,11 +22,13 @@ st.set_page_config(page_title="Observatorio de Sesgo", layout="wide")
 
 st.markdown("## Estudio Cuantitativo de Agenda-Setting: Aplicación de Procesamiento de Lenguaje Natural del Encuadre Comunicativo en la Prensa Colombiana en época electoral (Enero - Junio 2026)")
 
+st.markdown("La presente plataforma web expone los resultados de un análisis computacional aplicado a la cobertura política de los 6 medios de comunicación mas masivos en Colombia, correspondiente al periodo de enero a principios de junio de 2026. El objetivo es cuantificar las dinámicas de Agenda-Setting y perfilamiento editorial mediante técnicas de Ciencia de Datos y Procesamiento de Lenguaje Natural (NLP).")
+
 st.info("El periodismo político rara vez recurre a la hostilidad explícita. Desde la perspectiva del Análisis Crítico del Discurso (ACD), las líneas editoriales operan bajo una apariencia de neutralidad, donde las intenciones y juicios morales se codifican a través de eufemismos, selección léxica y matices gramaticales sutiles. Si el modelo se ejecutara con parámetros estándar, clasificaría erróneamente esta hostilidad velada como 'información neutral'. Para sortear este sesgo sutil, se aplicó una reducción técnica en el umbral de sensibilidad de la arquitectura XLM-RoBERTa, ajustándolo al 75% de confianza. Esta calibración táctica flexibilizó la frontera de decisión del clasificador, permitiendo a la Inteligencia Artificial penetrar la capa de neutralidad aparente y mapear la carga ideológica y los encuadres adversos que operan entre líneas.")
 
 with st.expander("METODOLOGÍA DEL ESTUDIO", expanded=False):
     st.markdown("""
-    La presente plataforma web expone los resultados de un análisis computacional aplicado a la cobertura política de los 6 medios de comunicación mas masivos en Colombia, correspondiente al periodo de enero a principios de junio de 2026. El objetivo es cuantificar las dinámicas de Agenda-Setting y perfilamiento editorial mediante técnicas de Ciencia de Datos y Procesamiento de Lenguaje Natural (NLP). El estudio se desarrolló a través del siguiente proceso metodológico:
+    El estudio se desarrolló a través del siguiente proceso metodológico:
 
     1. **Filtro Selectivo y Extracción (Web Scraping):** Los medios publican cientos de artículos diarios sobre múltiples temas. Para aislar exclusivamente el segmento de interés, el algoritmo de recolección se dirigió primordialmente a las secciones web catalogadas como "Política" o "Nación". Posteriormente, este barrido se cruzó bajo una regla estricta: solo se extrajeron las noticias cuyo titular o enlace URL contuviera explícitamente el nombre, apellido o mención directa de alguno de los 7 actores políticos más relevantes de la politica y /o campaña electoral. Esto permitió descartar por completo el ruido y garantizar una muestra diaria de 1 a 2 noticias 100% enfocadas en la agenda de poder.
 
