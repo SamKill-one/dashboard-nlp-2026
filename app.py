@@ -22,6 +22,8 @@ st.set_page_config(page_title="Observatorio de Sesgo", layout="wide")
 
 st.markdown("## Estudio Cuantitativo de Agenda-Setting: Aplicación de Procesamiento de Lenguaje Natural del Encuadre Comunicativo en la Prensa Colombiana en época electoral (Enero - Junio 2026)")
 
+st.info("El periodismo político rara vez recurre a la hostilidad explícita. Desde la perspectiva del Análisis Crítico del Discurso (ACD), las líneas editoriales operan bajo una apariencia de neutralidad, donde las intenciones y juicios morales se codifican a través de eufemismos, selección léxica y matices gramaticales sutiles. Si el modelo se ejecutara con parámetros estándar, clasificaría erróneamente esta hostilidad velada como 'información neutral'. Para sortear este sesgo sutil, se aplicó una reducción técnica en el umbral de sensibilidad de la arquitectura XLM-RoBERTa, ajustándolo al 75% de confianza. Esta calibración táctica flexibilizó la frontera de decisión del clasificador, permitiendo a la Inteligencia Artificial penetrar la capa de neutralidad aparente y mapear la carga ideológica y los encuadres adversos que operan entre líneas.")
+
 with st.expander("METODOLOGÍA DEL ESTUDIO", expanded=False):
     st.markdown("""
     La presente plataforma web expone los resultados de un análisis computacional aplicado a la cobertura política de los 6 medios de comunicación mas masivos en Colombia, correspondiente al periodo de enero a principios de junio de 2026. El objetivo es cuantificar las dinámicas de Agenda-Setting y perfilamiento editorial mediante técnicas de Ciencia de Datos y Procesamiento de Lenguaje Natural (NLP). El estudio se desarrolló a través del siguiente proceso metodológico:
