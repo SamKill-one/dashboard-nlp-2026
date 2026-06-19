@@ -386,7 +386,7 @@ with st.container():
     st.dataframe(pd.DataFrame(leyenda_data), hide_index=True, use_container_width=True)
 
 st.subheader("Visualización de Sentimientos y Mapa de Calor")
-st.markdown("Contraste de los temas abordados frente a su encuadre predominante (positivo, negativo o neutro). Adicionalmente, se presenta el Mapa de Calor Temático. (Nota metodológica: Casos de sarcasmo detectados e imputados en vivo: 0).")
+st.markdown("Contraste de los temas abordados frente a su encuadre predominante (positivo, negativo o neutro). Adicionalmente, se presenta el Mapa de Calor Temático.")
 if 'prob_POS' in df_filtrado.columns and 'prob_NEG' in df_filtrado.columns and 'prob_NEU' in df_filtrado.columns:
     df_sentiments = df_filtrado.groupby('tema_dominante')[['prob_POS', 'prob_NEG', 'prob_NEU']].mean().reset_index()
     df_sent_melted = df_sentiments.melt(id_vars='tema_dominante', var_name='Sentimiento', value_name='Probabilidad Media')
@@ -578,355 +578,8 @@ if 'indice_sentimiento' in df_filtrado.columns:
 else:
     st.info("Faltan columnas de sentimiento para la matriz de agenda.")
 
-# ==============================================================================
-# Módulo 3: Dinámicas Candidato-Medio (Panorama General)
-# ==============================================================================
-st.header("Módulo 3: Dinámicas Candidato-Medio")
-
-cols_existentes = [col for col in df_filtrado.columns if '_sesgo_detectado' in col]
-
-if cols_existentes:
-    cols_to_melt = ['fecha_dia', 'medio_emisor']
-    if 'len_cuerpo_words' in df_filtrado.columns:
-        cols_to_melt.append('len_cuerpo_words')
-        
-    df_melt_cand = df_filtrado.melt(
-        id_vars=cols_to_melt, 
-        value_vars=cols_existentes, 
-        var_name='candidato', 
-        value_name='sesgo'
-    )
-    
-    df_melt_cand = df_melt_cand.dropna(subset=['sesgo'])
-    df_melt_cand['sesgo'] = df_melt_cand['sesgo'].astype(str).str.strip()
-    valores_ignorados = ['None', 'nan', 'Sin Mencion', 'Neutral', '']
-    df_melt_cand = df_melt_cand[~df_melt_cand['sesgo'].isin(valores_ignorados)]
-    df_melt_cand['candidato'] = df_melt_cand['candidato'].str.replace('_sesgo_detectado', '').str.replace('_', ' ')
-    
-    st.markdown(f"Tras procesar la base de datos mediante nuestros modelos de Machine Learning (ML), se extrajeron un total de **{len(df_melt_cand):,} menciones a actores políticos**. Este volumen supera la cantidad neta de noticias analizadas debido a que un mismo artículo periodístico frecuentemente nombra a múltiples figuras de manera simultánea. A continuación, se detalla la distribución de estas menciones para identificar cuáles personajes públicos acapararon la mayor atención mediática.")
-    
-    if not df_melt_cand.empty:
-        # 1. TREEMAP: Volumen total
-        df_vol_cand = df_melt_cand.groupby('candidato').size().reset_index(name='menciones')
-        fig_treemap = px.treemap(df_vol_cand, path=['candidato'], values='menciones', title='Panorama de Menciones', height=600)
-        fig_treemap.update_traces(textinfo="label+value")
-        st.plotly_chart(fig_treemap, use_container_width=True, theme=None, config={'displayModeBar': False})
-            
-        # 2. DISPERSIÓN: Frecuencia vs Extensión
-        st.subheader("Frecuencia vs. Extensión")
-        st.markdown("Análisis de menciones por actor político. Correlación entre la frecuencia de publicación sobre un candidato frente a la extensión promedio (cantidad de palabras) de los artículos que lo referencian.")
-        if 'len_cuerpo_words' in df_filtrado.columns:
-            df_disp = df_melt_cand.groupby('candidato').agg(frecuencia=('sesgo', 'count'), longitud=('len_cuerpo_words', 'mean')).reset_index()
-            fig_scatter_cand = px.scatter(
-                df_disp, x='frecuencia', y='longitud', text='candidato', size='frecuencia', 
-                title='<b>Frecuencia de Menciones vs. Longitud de los Artículos</b>', height=600
-            )
-            
-            def get_position(c):
-                if 'Claudia' in str(c): return 'bottom right'
-                if 'Sergio' in str(c): return 'middle right'
-                return 'top center'
-                
-            posiciones = [get_position(c) for c in df_disp['candidato']]
-            fig_scatter_cand.update_traces(textposition=posiciones, cliponaxis=False)
-            
-            fig_scatter_cand.update_layout(
-                plot_bgcolor='white',
-                xaxis_title="Frecuencia de Menciones de Actores Políticos",
-                yaxis_title="Longitud de Palabras",
-                xaxis=dict(showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, showgrid=True, gridcolor='whitesmoke', gridwidth=1),
-                yaxis=dict(showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, showgrid=True, gridcolor='whitesmoke', gridwidth=1),
-                margin=dict(t=80, b=40, l=40, r=40)
-            )
-            st.plotly_chart(fig_scatter_cand, use_container_width=True, theme=None, config={'displayModeBar': False})
-        else:
-            st.info("No se puede graficar dispersión por falta de la columna de longitud del cuerpo.")
-
-        # 3. BARRAS AGRUPADAS: Perfil Editorial del Medio
-        st.subheader("Perfil Editorial (Volumen de Cobertura)")
-        st.markdown("La siguiente gráfica muestra la cuantificación de la atención prestada por cada medio a los actores políticos.")
-        df_medios_cand = df_melt_cand.groupby(['medio_emisor', 'candidato']).size().reset_index(name='menciones')
-        
-        fig_barras = px.bar(
-            df_medios_cand, 
-            x='medio_emisor',      
-            y='menciones', 
-            color='candidato',     
-            title='',
-            text_auto=True,
-            barmode='group',       
-            height=500
-        )
-        
-        fig_barras.update_traces(textposition='outside')
-        
-        fig_barras.update_layout(
-            plot_bgcolor='white',
-            xaxis_title="",
-            yaxis_title="",
-            legend_title_text="",
-            xaxis=dict(showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, categoryorder='total descending'),
-            yaxis=dict(showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, showticklabels=False),
-            margin=dict(t=80)
-        )
-        st.plotly_chart(fig_barras, use_container_width=True, theme=None, config={'displayModeBar': False})
-        
-    else:
-        st.warning("No hay datos suficientes después de la limpieza para graficar el módulo de candidatos.")
-else:
-    st.error("No se encontraron columnas de sesgo de candidatos en el dataset.")
-
-# ==============================================================================
-# Módulo 4: Asimetría de Encuadres y Hostilidad
-# ==============================================================================
-st.header("Módulo 4: Asimetría de Encuadres y Hostilidad")
-
-st.subheader("Resumen de Encuadres Mapeados")
-st.markdown("""
-**Guía Metodológica de Hostilidad:**
-
-**Culpabilidad Activa**: Sentimiento Negativo + Rol de Sujeto Activo. El artículo posee carga tóxica y el actor político es el ejecutor de la acción.
-
-**Victimización**: Sentimiento Negativo + Rol de Sujeto Pasivo. Carga tóxica donde el actor político es el receptor de la acción.
-
-**Contexto Adverso**: Sentimiento altamente negativo (Probabilidad > 70%) + Rol Sintáctico Desconocido. Mención del político dentro de un entorno crítico o de extrema negatividad, generando una asociación perjudicial implícita.
-
-**Indeterminado**: Sentimiento Neutral o Mixto + Rol Sintáctico Ambiguo. El artículo menciona al actor político en un contexto descriptivo o meramente informativo, sin asignarle una carga hostil clara ni un rol de agresor o víctima definido.
-""")
-
-# ==============================================================================
-# Mapa de Calor Cruzado: Medios vs Candidatos vs Encuadres
-# ==============================================================================
-st.subheader("Mapa de Calor Evolutivo")
-st.markdown("""Evolución del índice de polaridad (escala de +1 a -1) durante los seis meses de estudio. Revela el tema dominante asociado al candidato y el volumen de noticias, filtrando exclusivamente las relaciones con más de 4 publicaciones mensuales.
-""")
-
-df_tiempo = df_filtrado.copy()
-if not df_tiempo.empty:
-    df_tiempo['fecha'] = pd.to_datetime(df_tiempo['fecha_publicacion']).dt.tz_localize(None)
-    df_tiempo['Mes'] = df_tiempo['fecha'].dt.strftime('%Y-%m')
-
-    candidatos_base = [
-        'Gustavo_Petro', 'Iván_Cepeda', 'Abelardo_de_la_Espriella',
-        'Paloma_Valencia', 'Sergio_Fajardo', 'Claudia_López', 'Álvaro_Uribe_Vélez'
-    ]
-
-    frames = []
-    for cand in candidatos_base:
-        col_sent = f"{cand}_indice_sentimiento"
-        col_sesgo = f"{cand}_sesgo_detectado"
-        
-        if col_sent in df_tiempo.columns and col_sesgo in df_tiempo.columns:
-            temp = df_tiempo[['medio_emisor', 'Mes', 'tema_dominante', col_sent, col_sesgo]].copy()
-            temp.rename(columns={col_sent: 'Sentimiento', col_sesgo: 'Encuadre'}, inplace=True)
-            temp['Candidato'] = cand.replace('_', ' ')
-            frames.append(temp)
-
-    if frames:
-        df_melted_hm = pd.concat(frames, ignore_index=True)
-        df_melted_hm['Sentimiento'] = df_melted_hm['Sentimiento'].replace({0.0: np.nan})
-        df_melted_hm = df_melted_hm.dropna(subset=['Sentimiento'])
-
-        import textwrap
-        def calcular_mutacion(x):
-            moda_tema = x['tema_dominante'].mode()
-            tema_principal = moda_tema.iloc[0] if not moda_tema.empty else 'Sin Datos'
-            
-            if tema_principal == 'Sin Datos':
-                return pd.Series({'Sentimiento_Promedio': np.nan, 'Texto_Anotacion': ''})
-            
-            df_tema_ganador = x[x['tema_dominante'] == tema_principal]
-            volumen_real = len(df_tema_ganador)
-            
-            if volumen_real <= 4:
-                return pd.Series({'Sentimiento_Promedio': np.nan, 'Texto_Anotacion': ''})
-            
-            sesgos_validos = df_tema_ganador['Encuadre'].astype(str).str.strip()
-            sesgos_validos = sesgos_validos.replace({'None': np.nan, 'nan': np.nan, 'Sin Mencion': np.nan, 'Neutral': np.nan, '': np.nan}).dropna()
-            
-            moda_encuadre = sesgos_validos.mode()
-            encuadre_principal = moda_encuadre.iloc[0] if not moda_encuadre.empty else 'Sin Rol Fijo'
-            
-            sentimiento_prom = df_tema_ganador['Sentimiento'].mean()
-            
-            # Abreviaturas extremas para temas
-            dic_temas_ext = {
-                'Paz Total': 'PT',
-                'Institucional': 'Ins',
-                'Transición Energética y Medio Ambiente': 'TE',
-                'Economía y Reformas': 'Eco',
-                'Corrupción y Escándalos': 'Cor'
-            }
-            tema_abrev = dic_temas_ext.get(tema_principal, textwrap.shorten(tema_principal, width=4, placeholder=""))
-            
-            # Abreviaturas extremas para encuadres
-            dic_enc_ext = {
-                'Indeterminado': 'Ind',
-                'Culpabilidad activa': 'CA',
-                'Culpabilidad Activa': 'CA',
-                'Victimización': 'Vic',
-                'Contexto Adverso': 'CAd'
-            }
-            encuadre_str = str(encuadre_principal)
-            encuadre_abrev = dic_enc_ext.get(encuadre_str, textwrap.shorten(encuadre_str, width=3, placeholder=""))
-                
-            texto_celda = f"<b>{tema_abrev}</b><br>{encuadre_abrev}<br><sub>n={volumen_real} | {sentimiento_prom:+.2f}</sub>"
-            
-            return pd.Series({'Sentimiento_Promedio': sentimiento_prom, 'Texto_Anotacion': texto_celda})
-
-        df_agrup_hm = df_melted_hm.groupby(['medio_emisor', 'Candidato', 'Mes']).apply(calcular_mutacion).reset_index()
-
-        meses_unicos_hm = sorted(df_agrup_hm['Mes'].unique())
-        candidatos_unicos_hm = sorted(df_agrup_hm['Candidato'].unique())
-        medios_unicos_hm = sorted(df_agrup_hm['medio_emisor'].unique())
-
-        if medios_unicos_hm:
-            medio_hm = st.selectbox("Selecciona el Medio para ver Evolución Mensual:", medios_unicos_hm, key="hm_medio")
-            
-            df_m = df_agrup_hm[df_agrup_hm['medio_emisor'] == medio_hm]
-            
-            if not df_m.empty:
-                matriz_z = df_m.pivot(index='Candidato', columns='Mes', values='Sentimiento_Promedio').reindex(index=candidatos_unicos_hm, columns=meses_unicos_hm)
-                matriz_text = df_m.pivot(index='Candidato', columns='Mes', values='Texto_Anotacion').reindex(index=candidatos_unicos_hm, columns=meses_unicos_hm).fillna('')
-                
-                meses_espanol = {'01': 'Ene', '02': 'Feb', '03': 'Mar', '04': 'Abr', '05': 'May', '06': 'Jun', '07': 'Jul', '08': 'Ago', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dic'}
-                x_labels_hm = [f"<b>{meses_espanol[m.split('-')[1]]}</b>" for m in meses_unicos_hm]
-
-                fig_hm = go.Figure(data=go.Heatmap(
-                    z=matriz_z.values,
-                    x=x_labels_hm,
-                    y=[f"<b>{cand.replace(' ', '<br>')}</b>" for cand in candidatos_unicos_hm],
-                    text=matriz_text.values,
-                    texttemplate="%{text}",      
-                    hoverinfo="text",            
-                    coloraxis="coloraxis",       
-                    xgap=2, ygap=2,
-                    textfont=dict(size=11)
-                ))
-                
-                fig_hm.update_layout(
-                    title=f"Evolución del Encuadre Mensual: <b>{medio_hm}</b><br><sup>(Filtro riguroso: >4 noticias/mes | Tema, Rol, Volumen y Tono)</sup>",
-                    xaxis_title="",
-                    yaxis_title="",
-                    height=600,        
-                    coloraxis=dict(
-                        colorscale='RdBu', 
-                        cmin=-1, cmax=1, 
-                        colorbar=dict(title="", thickness=10)
-                    ),
-                    plot_bgcolor='white',
-                    xaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
-                    yaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8)
-                )
-                
-                st.plotly_chart(fig_hm, use_container_width=True, theme=None, config={'displayModeBar': False})
-                
-                st.markdown("""
-**Glosario de Abreviaturas:**
-* **Temas**: **PT** (Paz Total), **Ins** (Institucional), **TE** (Transición Energética), **Eco** (Economía y Reformas), **Cor** (Corrupción y Escándalos).
-* **Encuadres**: **CA** (Culpabilidad Activa), **Vic** (Victimización), **CAd** (Contexto Adverso), **Ind** (Indeterminado).
-""")
-            else:
-                st.info("No hay datos suficientes (que pasen el filtro de volumen) para este medio.")
-    else:
-         st.warning("No se encontraron columnas de sentimiento de candidatos.")
-
-# ==============================================================================
-# Asimetría de Encuadres (Culpabilidad, Victimización y Ataque)
-# ==============================================================================
-st.subheader("Volumen Total de Hostilidad")
-st.markdown("Consolidación de la asimetría editorial. Sumatoria de encuadres de Culpabilidad Activa, Victimización y Contexto Adverso dirigidos por los medios hacia cada candidato.")
-
-cols_existentes_asi = [col for col in df_filtrado.columns if '_sesgo_detectado' in col]
-
-if cols_existentes_asi:
-    col_conteo_asi = 'uuid_doc' if 'uuid_doc' in df_filtrado.columns else 'url'
-    df_melt_asi = df_filtrado.melt(id_vars=[col_conteo_asi, 'medio_emisor'], value_vars=cols_existentes_asi, var_name='candidato', value_name='sesgo')
-    
-    df_melt_asi['candidato'] = df_melt_asi['candidato'].str.replace('_sesgo_detectado', '').str.replace('_', ' ')
-    df_melt_asi['sesgo'] = df_melt_asi['sesgo'].astype(str).str.strip().str.title()
-    
-    encuadres_hostiles = [
-        'Culpabilidad Activa', 
-        'Victimización', 
-        'Victimizacion',
-        'Contexto Adverso'
-    ]
-    
-    df_hostil = df_melt_asi[df_melt_asi['sesgo'].isin(encuadres_hostiles)]
-    asimetria = df_hostil.groupby(['medio_emisor', 'candidato']).size().reset_index(name='frecuencia')
-    
-    if not asimetria.empty:
-        matriz_asi = asimetria.pivot(index='medio_emisor', columns='candidato', values='frecuencia').fillna(0)
-        total_hostil = asimetria['frecuencia'].sum()
-        
-        fig_asi = px.imshow(
-            matriz_asi, 
-            text_auto=True, 
-            color_continuous_scale='OrRd', 
-            title=f'Asimetría de Encuadres: Volumen Total de Hostilidad (N={total_hostil})',
-            labels=dict(x="", y="", color=""),
-            aspect="auto",
-            height=500
-        )
-        
-        fig_asi.update_layout(coloraxis_colorbar=dict(thickness=10, title=""),
-            plot_bgcolor='white',
-            xaxis=dict(tickangle=45, showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
-            yaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8)
-        )
-        
-        st.plotly_chart(fig_asi, use_container_width=True, theme=None, config={'displayModeBar': False})
-        
-        with st.expander("📊 Resumen de Encuadres Mapeados (Datos Exactos)"):
-            st.dataframe(df_hostil['sesgo'].value_counts().reset_index(name='Cantidad').rename(columns={'sesgo': 'Encuadre Hostil'}))
-    else:
-        st.info("No se encontraron encuadres hostiles para graficar después de aplicar los filtros.")
-else:
-    st.error("No se encontraron las columnas de '_sesgo_detectado' para la asimetría.")
-
-
-# ==============================================================================
-# Macro Tendencias de Encuadres Hostiles (SMA 7)
-# ==============================================================================
-st.subheader("Macrotendencias: Promedio Móvil de 7 Días")
-st.markdown("""
-**¿Por qué usar un Promedio Móvil (SMA-7)?**  
-El volumen diario de noticias puede ser muy caótico y ruidoso. Esta gráfica suaviza esas fluctuaciones calculando el promedio consecutivo de los últimos 7 días. Esto nos permite observar de forma limpia las "olas" de ataques mediáticos a lo largo de todos los meses de estudio. Un pico sostenido en el tiempo revela verdaderas campañas, coyunturas de alta presión o escándalos continuos contra un actor político.
-""")
-
-if 'df_melt_cand' in locals() and not df_melt_cand.empty:
-    ataques_keywords = ['culpabilidad activa', 'victimización', 'victimizacion']
-    df_ataques_sma = df_melt_cand[df_melt_cand['sesgo'].str.lower().isin(ataques_keywords)]
-    
-    if not df_ataques_sma.empty:
-        df_ts_cand = df_ataques_sma.groupby(['fecha_dia', 'candidato']).size().unstack().fillna(0)
-        df_sma = df_ts_cand.rolling(window=7, min_periods=1).mean().reset_index().melt(id_vars='fecha_dia', value_name='sma_7')
-        
-        fig_sma = px.line(
-            df_sma, 
-            x='fecha_dia', 
-            y='sma_7', 
-            color='candidato', 
-            title='<b>Macro Tendencias: Promedio Móvil (7 días) de Encuadres de Ataque</b>', 
-            height=600
-        )
-        fig_sma.update_layout(
-            plot_bgcolor='white',
-            xaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, type='date', dtick="M1", tickformat="%b"),
-            yaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
-            xaxis_title="",
-            yaxis_title="Promedio de Noticias (SMA-7)",
-            legend_title_text=""
-        )
-        st.plotly_chart(fig_sma, use_container_width=True, theme=None, config={'displayModeBar': False})
-    else:
-        st.info("No se detectaron ataques o victimizaciones para graficar tendencias.")
-else:
-    st.error("No se encontró la base de datos pre-procesada de candidatos (Módulo 3) requerida para las tendencias.")
-
 st.subheader("Línea de Tiempo: Coordinación en Encuadre de sentimiento Editorial")
-st.markdown("Algoritmo de detección de coordinación. Identifica periodos donde dos o más medios convergen temáticamente con un índice de sentimiento inferior a -0.38, indicador de tensión leve, distanciamiento crítico o cuestionamientos indirectos.")
+st.markdown("Algoritmo de detección de coordinación. Las coyunturas de país generan naturalmente picos informativos en los que todos los medios participan simultáneamente. Sin embargo, para distinguir una simple coincidencia noticiosa de una posible **'Coordinación Editorial'**, este algoritmo filtra exclusivamente los periodos donde dos o más medios convergen temáticamente manteniendo un índice de sentimiento inferior a -0.38 (marcador cuantitativo de tensión leve, distanciamiento crítico o cuestionamiento indirecto).")
 
 if 'indice_sentimiento' in df_filtrado.columns:
     df_ataques = df_filtrado[df_filtrado['indice_sentimiento'] <= -0.38].copy()
@@ -1023,7 +676,7 @@ if 'indice_sentimiento' in df_filtrado.columns:
                 import textwrap
                 opcion_corta = textwrap.shorten(tema_alianza, width=45, placeholder="...")
                 
-                altura_dinamica = max(500, len(orden_y) * 90)
+                altura_dinamica = max(350, len(orden_y) * 45)
                 
                 fig_alianzas.update_layout(
                     title=f"Evolución de la Coordinación Editorial<br><sup>Tema: <b>{opcion_corta}</b> (Tamaño = Días Coordinados | Color = Sentimiento -1 a +1)</sup>",
@@ -1031,7 +684,7 @@ if 'indice_sentimiento' in df_filtrado.columns:
                     yaxis_title="",
                     yaxis=dict(categoryorder='array', categoryarray=orden_y, showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, automargin=True, tickfont=dict(size=10)),
                     height=altura_dinamica,
-                    margin=dict(l=0, r=10, t=100, b=50), 
+                    margin=dict(l=0, r=10, t=80, b=40), 
                     plot_bgcolor='white', 
                     xaxis=dict(showgrid=True, gridcolor='whitesmoke', tickangle=0, showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
                     coloraxis=dict(colorscale='RdBu', cmin=-1, cmax=1, colorbar=dict(title=""))
@@ -1046,26 +699,370 @@ if 'indice_sentimiento' in df_filtrado.columns:
 else:
     st.info("No se encontró la columna de sentimiento para ejecutar el análisis de hostilidad.")
 
+
+# ==============================================================================
+# Módulo 3: Dinámicas Actor Político-Medio (Panorama General)
+# ==============================================================================
+st.header("Módulo 3: Dinámicas Actor Político-Medio")
+
+cols_existentes = [col for col in df_filtrado.columns if '_sesgo_detectado' in col]
+
+if cols_existentes:
+    cols_to_melt = ['fecha_dia', 'medio_emisor']
+    if 'len_cuerpo_words' in df_filtrado.columns:
+        cols_to_melt.append('len_cuerpo_words')
+        
+    df_melt_cand = df_filtrado.melt(
+        id_vars=cols_to_melt, 
+        value_vars=cols_existentes, 
+        var_name='actor político', 
+        value_name='sesgo'
+    )
+    
+    df_melt_cand = df_melt_cand.dropna(subset=['sesgo'])
+    df_melt_cand['sesgo'] = df_melt_cand['sesgo'].astype(str).str.strip()
+    valores_ignorados = ['None', 'nan', 'Sin Mencion', 'Neutral', '']
+    df_melt_cand = df_melt_cand[~df_melt_cand['sesgo'].isin(valores_ignorados)]
+    df_melt_cand['actor político'] = df_melt_cand['actor político'].str.replace('_sesgo_detectado', '').str.replace('_', ' ')
+    
+    st.markdown(f"Tras procesar la base de datos mediante nuestros modelos de Machine Learning (ML), se extrajeron un total de **{len(df_melt_cand):,} menciones a actores políticos**. Este volumen supera la cantidad neta de noticias analizadas debido a que un mismo artículo periodístico frecuentemente nombra a múltiples figuras de manera simultánea. A continuación, se detalla la distribución de estas menciones para identificar cuáles personajes públicos acapararon la mayor atención mediática.")
+    
+    if not df_melt_cand.empty:
+        # 1. TREEMAP: Volumen total
+        df_vol_cand = df_melt_cand.groupby('actor político').size().reset_index(name='menciones')
+        fig_treemap = px.treemap(df_vol_cand, path=['actor político'], values='menciones', title='Panorama de Menciones', height=600)
+        fig_treemap.update_traces(textinfo="label+value")
+        st.plotly_chart(fig_treemap, use_container_width=True, theme=None, config={'displayModeBar': False})
+            
+        # 2. DISPERSIÓN: Frecuencia vs Extensión
+        st.subheader("Frecuencia vs. Extensión")
+        st.markdown("Análisis de menciones por actor político. Correlación entre la frecuencia de publicación sobre un actor político frente a la extensión promedio (cantidad de palabras) de los artículos que lo referencian.")
+        if 'len_cuerpo_words' in df_filtrado.columns:
+            df_disp = df_melt_cand.groupby('actor político').agg(frecuencia=('sesgo', 'count'), longitud=('len_cuerpo_words', 'mean')).reset_index()
+            fig_scatter_cand = px.scatter(
+                df_disp, x='frecuencia', y='longitud', text='actor político', size='frecuencia', 
+                title='<b>Frecuencia de Menciones vs. Longitud de los Artículos</b>', height=600
+            )
+            
+            def get_position(c):
+                if 'Claudia' in str(c): return 'bottom right'
+                if 'Sergio' in str(c): return 'middle right'
+                return 'top center'
+                
+            posiciones = [get_position(c) for c in df_disp['actor político']]
+            fig_scatter_cand.update_traces(textposition=posiciones, cliponaxis=False)
+            
+            fig_scatter_cand.update_layout(
+                plot_bgcolor='white',
+                xaxis_title="Frecuencia de Menciones de Actores Políticos",
+                yaxis_title="Longitud de Palabras",
+                xaxis=dict(showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, showgrid=True, gridcolor='whitesmoke', gridwidth=1),
+                yaxis=dict(showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, showgrid=True, gridcolor='whitesmoke', gridwidth=1),
+                margin=dict(t=80, b=40, l=40, r=40)
+            )
+            st.plotly_chart(fig_scatter_cand, use_container_width=True, theme=None, config={'displayModeBar': False})
+        else:
+            st.info("No se puede graficar dispersión por falta de la columna de longitud del cuerpo.")
+
+        # 3. BARRAS AGRUPADAS: Perfil Editorial del Medio
+        st.subheader("Perfil Editorial (Volumen de Cobertura)")
+        st.markdown("La siguiente gráfica muestra la cuantificación de la atención prestada por cada medio a los actores políticos.")
+        df_medios_cand = df_melt_cand.groupby(['medio_emisor', 'actor político']).size().reset_index(name='menciones')
+        
+        fig_barras = px.bar(
+            df_medios_cand, 
+            x='medio_emisor',      
+            y='menciones', 
+            color='actor político',     
+            title='',
+            text_auto=True,
+            barmode='group',       
+            height=500
+        )
+        
+        fig_barras.update_traces(textposition='outside')
+        
+        fig_barras.update_layout(
+            plot_bgcolor='white',
+            xaxis_title="",
+            yaxis_title="",
+            legend_title_text="",
+            xaxis=dict(showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, categoryorder='total descending'),
+            yaxis=dict(showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, showticklabels=False),
+            margin=dict(t=80)
+        )
+        st.plotly_chart(fig_barras, use_container_width=True, theme=None, config={'displayModeBar': False})
+        
+    else:
+        st.warning("No hay datos suficientes después de la limpieza para graficar el módulo de actores políticos.")
+else:
+    st.error("No se encontraron columnas de sesgo de actores políticos en el dataset.")
+
+# ==============================================================================
+# Módulo 4: Asimetría de Encuadres y Hostilidad
+# ==============================================================================
+st.header("Módulo 4: Asimetría de Encuadres y Hostilidad")
+
+st.subheader("Resumen de Encuadres Mapeados")
+st.markdown("""
+**Guía Metodológica de Hostilidad:**
+
+**Culpabilidad Activa**: Sentimiento Negativo + Rol de Sujeto Activo. El artículo posee carga tóxica y el actor político es el ejecutor de la acción.
+
+**Victimización**: Sentimiento Negativo + Rol de Sujeto Pasivo. Carga tóxica donde el actor político es el receptor de la acción.
+
+**Contexto Adverso**: Sentimiento altamente negativo (Probabilidad > 70%) + Rol Sintáctico Desconocido. Mención del político dentro de un entorno crítico o de extrema negatividad, generando una asociación perjudicial implícita.
+
+**Indeterminado**: Sentimiento Neutral o Mixto + Rol Sintáctico Ambiguo. El artículo menciona al actor político en un contexto descriptivo o meramente informativo, sin asignarle una carga hostil clara ni un rol de agresor o víctima definido.
+""")
+
+# ==============================================================================
+# Mapa de Calor Cruzado: Medios vs Actores Políticos vs Encuadres
+# ==============================================================================
+st.subheader("Mapa de Calor Evolutivo")
+st.markdown("""Evolución del índice de polaridad (escala de +1 a -1) durante los seis meses de estudio. Revela el tema dominante asociado al actor político y el volumen de noticias, filtrando exclusivamente las relaciones con más de 4 publicaciones mensuales.
+""")
+
+st.info("""**Reconceptualización de la Neutralidad (El Mito de la Objetividad):**
+En la escala XLM-RoBERTa aplicada, el valor 0 (Blanco) no representa un estado de "objetividad pura" o ausencia total de postura, puesto que el filtro humano y editorial es estadísticamente inevitable. En el contexto de este estudio computacional, el valor 0 indica una Estructura Descriptiva de Baja Tensión o "Neutralidad Aparente"; es decir, artículos donde el medio logró despojar el texto de marcadores semánticos emocionales o de lenguaje altamente cargado, presentando los hechos de manera sintácticamente aséptica, independientemente de la intencionalidad oculta en la selección de la agenda (Agenda-Setting).""")
+
+df_tiempo = df_filtrado.copy()
+if not df_tiempo.empty:
+    df_tiempo['fecha'] = pd.to_datetime(df_tiempo['fecha_publicacion']).dt.tz_localize(None)
+    df_tiempo['Mes'] = df_tiempo['fecha'].dt.strftime('%Y-%m')
+
+    candidatos_base = [
+        'Gustavo_Petro', 'Iván_Cepeda', 'Abelardo_de_la_Espriella',
+        'Paloma_Valencia', 'Sergio_Fajardo', 'Claudia_López', 'Álvaro_Uribe_Vélez'
+    ]
+
+    frames = []
+    for cand in candidatos_base:
+        col_sent = f"{cand}_indice_sentimiento"
+        col_sesgo = f"{cand}_sesgo_detectado"
+        
+        if col_sent in df_tiempo.columns and col_sesgo in df_tiempo.columns:
+            temp = df_tiempo[['medio_emisor', 'Mes', 'tema_dominante', col_sent, col_sesgo]].copy()
+            temp.rename(columns={col_sent: 'Sentimiento', col_sesgo: 'Encuadre'}, inplace=True)
+            temp['Actor Político'] = cand.replace('_', ' ')
+            frames.append(temp)
+
+    if frames:
+        df_melted_hm = pd.concat(frames, ignore_index=True)
+        df_melted_hm['Sentimiento'] = df_melted_hm['Sentimiento'].replace({0.0: np.nan})
+        df_melted_hm = df_melted_hm.dropna(subset=['Sentimiento'])
+
+        import textwrap
+        def calcular_mutacion(x):
+            moda_tema = x['tema_dominante'].mode()
+            tema_principal = moda_tema.iloc[0] if not moda_tema.empty else 'Sin Datos'
+            
+            if tema_principal == 'Sin Datos':
+                return pd.Series({'Sentimiento_Promedio': np.nan, 'Texto_Anotacion': ''})
+            
+            df_tema_ganador = x[x['tema_dominante'] == tema_principal]
+            volumen_real = len(df_tema_ganador)
+            
+            if volumen_real <= 4:
+                return pd.Series({'Sentimiento_Promedio': np.nan, 'Texto_Anotacion': ''})
+            
+            sesgos_validos = df_tema_ganador['Encuadre'].astype(str).str.strip()
+            sesgos_validos = sesgos_validos.replace({'None': np.nan, 'nan': np.nan, 'Sin Mencion': np.nan, 'Neutral': np.nan, '': np.nan}).dropna()
+            
+            moda_encuadre = sesgos_validos.mode()
+            encuadre_principal = moda_encuadre.iloc[0] if not moda_encuadre.empty else 'Sin Rol Fijo'
+            
+            sentimiento_prom = df_tema_ganador['Sentimiento'].mean()
+            
+            # Abreviaturas extremas para temas
+            dic_temas_ext = {
+                'Paz Total': 'PT',
+                'Institucional': 'Ins',
+                'Transición Energética y Medio Ambiente': 'TE',
+                'Economía y Reformas': 'Eco',
+                'Corrupción y Escándalos': 'Cor'
+            }
+            tema_abrev = dic_temas_ext.get(tema_principal, textwrap.shorten(tema_principal, width=4, placeholder=""))
+            
+            # Abreviaturas extremas para encuadres
+            dic_enc_ext = {
+                'Indeterminado': 'Ind',
+                'Culpabilidad activa': 'CA',
+                'Culpabilidad Activa': 'CA',
+                'Victimización': 'Vic',
+                'Contexto Adverso': 'CAd'
+            }
+            encuadre_str = str(encuadre_principal)
+            encuadre_abrev = dic_enc_ext.get(encuadre_str, textwrap.shorten(encuadre_str, width=3, placeholder=""))
+                
+            texto_celda = f"<b>{tema_abrev}</b><br>{encuadre_abrev}<br><sub>n={volumen_real} | {sentimiento_prom:+.2f}</sub>"
+            
+            return pd.Series({'Sentimiento_Promedio': sentimiento_prom, 'Texto_Anotacion': texto_celda})
+
+        df_agrup_hm = df_melted_hm.groupby(['medio_emisor', 'Actor Político', 'Mes']).apply(calcular_mutacion).reset_index()
+
+        meses_unicos_hm = sorted(df_agrup_hm['Mes'].unique())
+        candidatos_unicos_hm = sorted(df_agrup_hm['Actor Político'].unique())
+        medios_unicos_hm = sorted(df_agrup_hm['medio_emisor'].unique())
+
+        if medios_unicos_hm:
+            medio_hm = st.selectbox("Selecciona el Medio para ver Evolución Mensual:", medios_unicos_hm, key="hm_medio")
+            
+            df_m = df_agrup_hm[df_agrup_hm['medio_emisor'] == medio_hm]
+            
+            if not df_m.empty:
+                matriz_z = df_m.pivot(index='Actor Político', columns='Mes', values='Sentimiento_Promedio').reindex(index=candidatos_unicos_hm, columns=meses_unicos_hm)
+                matriz_text = df_m.pivot(index='Actor Político', columns='Mes', values='Texto_Anotacion').reindex(index=candidatos_unicos_hm, columns=meses_unicos_hm).fillna('')
+                
+                meses_espanol = {'01': 'Ene', '02': 'Feb', '03': 'Mar', '04': 'Abr', '05': 'May', '06': 'Jun', '07': 'Jul', '08': 'Ago', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dic'}
+                x_labels_hm = [f"<b>{meses_espanol[m.split('-')[1]]}</b>" for m in meses_unicos_hm]
+
+                fig_hm = go.Figure(data=go.Heatmap(
+                    z=matriz_z.values,
+                    x=x_labels_hm,
+                    y=[f"<b>{cand.replace(' ', '<br>')}</b>" for cand in candidatos_unicos_hm],
+                    text=matriz_text.values,
+                    texttemplate="%{text}",      
+                    hoverinfo="text",            
+                    coloraxis="coloraxis",       
+                    xgap=2, ygap=2,
+                    textfont=dict(size=11)
+                ))
+                
+                fig_hm.update_layout(
+                    title=f"Evolución del Encuadre Mensual: <b>{medio_hm}</b><br><sup>(Filtro riguroso: >4 noticias/mes | Tema, Rol, Volumen y Tono)</sup>",
+                    xaxis_title="",
+                    yaxis_title="",
+                    height=600,        
+                    coloraxis=dict(
+                        colorscale='RdBu', 
+                        cmin=-1, cmax=1, 
+                        colorbar=dict(title="", thickness=10)
+                    ),
+                    plot_bgcolor='white',
+                    xaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
+                    yaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8)
+                )
+                
+                st.plotly_chart(fig_hm, use_container_width=True, theme=None, config={'displayModeBar': False})
+                
+                st.markdown("""
+**Glosario de Abreviaturas:**
+* **Temas**: **PT** (Paz Total), **Ins** (Institucional), **TE** (Transición Energética), **Eco** (Economía y Reformas), **Cor** (Corrupción y Escándalos).
+* **Encuadres**: **CA** (Culpabilidad Activa), **Vic** (Victimización), **CAd** (Contexto Adverso), **Ind** (Indeterminado).
+""")
+            else:
+                st.info("No hay datos suficientes (que pasen el filtro de volumen) para este medio.")
+    else:
+         st.warning("No se encontraron columnas de sentimiento de actores políticos.")
+
+# ==============================================================================
+# Asimetría de Encuadres (Culpabilidad, Victimización y Ataque)
+# ==============================================================================
+st.subheader("Volumen Total de Hostilidad")
+st.markdown("Consolidación de la asimetría editorial. El **'Volumen Total de Hostilidad'** equivale matemáticamente a la sumatoria absoluta de las tres categorías de encuadre adverso (Culpabilidad Activa, Victimización y Contexto Adverso) dirigidas por los medios hacia cada actor político. Un mayor volumen representa un índice de presión mediática sistemática y un desgaste reputacional más severo inducido por la agenda periodística.")
+
+cols_existentes_asi = [col for col in df_filtrado.columns if '_sesgo_detectado' in col]
+
+if cols_existentes_asi:
+    col_conteo_asi = 'uuid_doc' if 'uuid_doc' in df_filtrado.columns else 'url'
+    df_melt_asi = df_filtrado.melt(id_vars=[col_conteo_asi, 'medio_emisor'], value_vars=cols_existentes_asi, var_name='actor político', value_name='sesgo')
+    
+    df_melt_asi['actor político'] = df_melt_asi['actor político'].str.replace('_sesgo_detectado', '').str.replace('_', ' ')
+    df_melt_asi['sesgo'] = df_melt_asi['sesgo'].astype(str).str.strip().str.title()
+    
+    encuadres_hostiles = [
+        'Culpabilidad Activa', 
+        'Victimización', 
+        'Victimizacion',
+        'Contexto Adverso'
+    ]
+    
+    df_hostil = df_melt_asi[df_melt_asi['sesgo'].isin(encuadres_hostiles)]
+    asimetria = df_hostil.groupby(['medio_emisor', 'actor político']).size().reset_index(name='frecuencia')
+    
+    if not asimetria.empty:
+        with st.expander("📊 Resumen de Encuadres Mapeados (Datos Exactos)"):
+            st.dataframe(df_hostil['sesgo'].value_counts().reset_index(name='Cantidad').rename(columns={'sesgo': 'Encuadre Hostil'}))
+
+        matriz_asi = asimetria.pivot(index='medio_emisor', columns='actor político', values='frecuencia').fillna(0)
+        total_hostil = asimetria['frecuencia'].sum()
+        
+        fig_asi = px.imshow(
+            matriz_asi, 
+            text_auto=True, 
+            color_continuous_scale='OrRd', 
+            title=f'Asimetría de Encuadres: Volumen Total de Hostilidad (N={total_hostil})',
+            labels=dict(x="", y="", color=""),
+            aspect="auto",
+            height=500
+        )
+        
+        fig_asi.update_layout(coloraxis_colorbar=dict(thickness=10, title=""),
+            plot_bgcolor='white',
+            xaxis=dict(tickangle=45, showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
+            yaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8)
+        )
+        
+        st.plotly_chart(fig_asi, use_container_width=True, theme=None, config={'displayModeBar': False})
+    else:
+        st.info("No se encontraron encuadres hostiles para graficar después de aplicar los filtros.")
+else:
+    st.error("No se encontraron las columnas de '_sesgo_detectado' para la asimetría.")
+
+
+# ==============================================================================
+# Macro Tendencias de Encuadres Hostiles (SMA 7)
+# ==============================================================================
+st.subheader("Macrotendencias: Promedio Móvil de 7 Días")
+st.markdown("""El volumen diario de noticias puede ser muy caótico y ruidoso. Esta gráfica suaviza esas fluctuaciones calculando el promedio consecutivo de los últimos 7 días. Esto nos permite observar de forma limpia las "olas" de ataques mediáticos a lo largo de todos los meses de estudio. Un pico sostenido en el tiempo revela verdaderas campañas, coyunturas de alta presión o escándalos continuos contra un actor político.
+""")
+
+if 'df_melt_cand' in locals() and not df_melt_cand.empty:
+    ataques_keywords = ['culpabilidad activa', 'victimización', 'victimizacion']
+    df_ataques_sma = df_melt_cand[df_melt_cand['sesgo'].str.lower().isin(ataques_keywords)]
+    
+    if not df_ataques_sma.empty:
+        df_ts_cand = df_ataques_sma.groupby(['fecha_dia', 'actor político']).size().unstack().fillna(0)
+        df_sma = df_ts_cand.rolling(window=7, min_periods=1).mean().reset_index().melt(id_vars='fecha_dia', value_name='sma_7')
+        
+        fig_sma = px.line(
+            df_sma, 
+            x='fecha_dia', 
+            y='sma_7', 
+            color='actor político', 
+            title='<b>Macro Tendencias: Promedio Móvil (7 días) de Encuadres de Ataque</b>', 
+            height=600
+        )
+        fig_sma.update_layout(
+            plot_bgcolor='white',
+            xaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8, type='date', dtick="M1", tickformat="%b"),
+            yaxis=dict(showgrid=True, gridcolor='whitesmoke', showline=True, linewidth=1, linecolor='black', ticks='inside', tickcolor='black', ticklen=8),
+            xaxis_title="",
+            yaxis_title="Promedio de Noticias (SMA-7)",
+            legend_title_text=""
+        )
+        st.plotly_chart(fig_sma, use_container_width=True, theme=None, config={'displayModeBar': False})
+    else:
+        st.info("No se detectaron ataques o victimizaciones para graficar tendencias.")
+else:
+    st.error("No se encontró la base de datos pre-procesada de actores políticos (Módulo 3) requerida para las tendencias.")
+
 # ==============================================================================
 # Módulo 5: Análisis Causal (Efecto Dominó)
 # ==============================================================================
 st.header("Módulo 5: Análisis Causal (Efecto Dominó y Gatillo)")
 st.subheader("Efecto Dominó")
-st.markdown("""
-**¿Para qué sirve esta gráfica?**  
-Permite descubrir si existe un **'Efecto Dominó'** en la agenda mediática. Compara cuánta negatividad acumuló un medio durante una semana, y observa si esa saturación de noticias negativas terminó provocando que a la semana siguiente se lanzaran ataques directos (encuadres de culpabilidad) contra un candidato específico.
-
-**¿Cómo se calcula?**  
-El algoritmo toma la carga de sentimiento negativo dirigida de la semana anterior (t-1) y la superpone visualmente contra el volumen exacto de ataques editoriales comprobados en la semana actual.
+st.markdown("""La siguiente visualización modela el **'Efecto Dominó'** dentro de la agenda mediática. Su objetivo es rastrear la acumulación temporal de negatividad (saturación informativa) que los medios proyectan durante una semana determinada, y evaluar si dicha sobrecarga de tensión sistemática actúa como catalizador para detonar ataques directos o encuadres de Culpabilidad Activa en el futuro cercano. Para evidenciar esto, el algoritmo computa la carga de sentimiento negativo emitida durante la semana anterior (t-1) y la superpone visualmente contra el volumen exacto de ataques editoriales comprobados en la semana actual contra un actor político específico.
 """)
 
 cols_existentes_causal = [col for col in df_filtrado.columns if '_sesgo_detectado' in col]
 
 if cols_existentes_causal:
     df_melt_causal = df_filtrado.melt(id_vars=['fecha_publicacion', 'prob_NEG'], 
-                      value_vars=cols_existentes_causal, var_name='candidato', value_name='sesgo')
+                      value_vars=cols_existentes_causal, var_name='actor político', value_name='sesgo')
     
-    df_melt_causal['candidato'] = df_melt_causal['candidato'].str.replace('_sesgo_detectado', '').str.replace('_', ' ')
+    df_melt_causal['actor político'] = df_melt_causal['actor político'].str.replace('_sesgo_detectado', '').str.replace('_', ' ')
     df_melt_causal['sesgo_limpio'] = df_melt_causal['sesgo'].astype(str).str.strip().str.title()
     
     valores_ignorados = ['None', 'Nan', 'Sin Mencion', 'Neutral', '']
@@ -1082,26 +1079,26 @@ if cols_existentes_causal:
     df_melt_causal['Es_Ataque'] = (df_melt_causal['sesgo_limpio'] == 'Culpabilidad Activa').astype(int)
     df_melt_causal['fecha_semana'] = df_melt_causal['fecha_publicacion'].dt.to_period('W').dt.start_time
     
-    df_agrupado_causal = df_melt_causal.groupby(['candidato', 'fecha_semana']).agg(
+    df_agrupado_causal = df_melt_causal.groupby(['actor político', 'fecha_semana']).agg(
         Negatividad_Semana=('Toxicidad_Dirigida', 'sum'), 
         Total_Ataques_Semana=('Es_Ataque', 'sum') 
     ).reset_index()
     
     semanas_unicas = sorted(df_melt_causal['fecha_semana'].dropna().unique())
-    candidatos_unicos_causal = df_melt_causal['candidato'].unique()
+    candidatos_unicos_causal = df_melt_causal['actor político'].unique()
     
-    grid = pd.MultiIndex.from_product([candidatos_unicos_causal, semanas_unicas], names=['candidato', 'fecha_semana']).to_frame(index=False)
-    df_cand_sem = pd.merge(grid, df_agrupado_causal, on=['candidato', 'fecha_semana'], how='left')
+    grid = pd.MultiIndex.from_product([candidatos_unicos_causal, semanas_unicas], names=['actor político', 'fecha_semana']).to_frame(index=False)
+    df_cand_sem = pd.merge(grid, df_agrupado_causal, on=['actor político', 'fecha_semana'], how='left')
     
     df_cand_sem['Negatividad_Semana'] = df_cand_sem['Negatividad_Semana'].fillna(0)
     df_cand_sem['Total_Ataques_Semana'] = df_cand_sem['Total_Ataques_Semana'].fillna(0)
     
-    df_cand_sem = df_cand_sem.sort_values(['candidato', 'fecha_semana'])
-    df_cand_sem['Negatividad_Semana_Pasada'] = df_cand_sem.groupby('candidato')['Negatividad_Semana'].shift(1)
+    df_cand_sem = df_cand_sem.sort_values(['actor político', 'fecha_semana'])
+    df_cand_sem['Negatividad_Semana_Pasada'] = df_cand_sem.groupby('actor político')['Negatividad_Semana'].shift(1)
     
     df_cand_sem = df_cand_sem.dropna(subset=['Negatividad_Semana_Pasada'])
     
-    candidatos_atacados = df_cand_sem.groupby('candidato')['Total_Ataques_Semana'].sum()
+    candidatos_atacados = df_cand_sem.groupby('actor político')['Total_Ataques_Semana'].sum()
     candidatos_validos = candidatos_atacados[candidatos_atacados > 0].index.tolist()
 
     if candidatos_validos:
@@ -1114,7 +1111,7 @@ if cols_existentes_causal:
         default_idx = candidatos_validos.index("Sergio Fajardo") if "Sergio Fajardo" in candidatos_validos else 0
         cand_efecto = st.selectbox("Selecciona el Actor Político Objetivo:", candidatos_validos, index=default_idx)
         
-        df_sub = df_cand_sem[df_cand_sem['candidato'] == cand_efecto]
+        df_sub = df_cand_sem[df_cand_sem['actor político'] == cand_efecto]
         
         from plotly.subplots import make_subplots
         import plotly.graph_objects as go
@@ -1155,7 +1152,7 @@ if cols_existentes_causal:
             height=550,
             plot_bgcolor='white',
             hovermode="x unified",
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
+            legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5)
         )
 
         fig_time.update_yaxes(
@@ -1171,7 +1168,7 @@ if cols_existentes_causal:
 
         st.plotly_chart(fig_time, use_container_width=True, theme=None, config={'displayModeBar': False})
     else:
-        st.info("No hay candidatos con suficientes datos o ataques para graficar el efecto dominó.")
+        st.info("No hay actores políticos con suficientes datos o ataques para graficar el efecto dominó.")
 else:
     st.error("No se encontraron las columnas de '_sesgo_detectado' para el módulo causal.")
 
@@ -1180,13 +1177,11 @@ else:
 # Curva Logit Interactiva: El Efecto Gatillo
 # ==============================================================================
 st.subheader("El Efecto Gatillo (Curva Logit)")
-st.markdown("""
-**¿Para qué sirve esta gráfica?**  
-Mide la probabilidad matemática de que un medio publique un ataque directo contra un actor político, basándose en cuánta negatividad venía manejando ese medio en la semana anterior. En otras palabras, nos ayuda a predecir en qué punto de saturación la línea editorial 'jala el gatillo' y ataca.
-
-**¿Cómo se calcula?**  
-Se construyó utilizando un modelo econométrico de Regresión Logística (Curva Logit). El modelo aprende de los datos históricos cruzando los ataques confirmados (Sí/No) contra los niveles previos de negatividad y miedo presentes en los textos, trazando así una curva de probabilidad de 0 a 1 (0% a 100%).
+st.markdown("""La siguiente gráfica calcula la probabilidad matemática de que los medios publiquen un ataque editorial directo contra un actor político, basándose en cuánta negatividad acumuló durante la semana anterior. En otras palabras, nos ayuda a predecir en qué punto de saturación la línea editorial 'jala el gatillo' y ataca. Para lograrlo, se construyó un modelo econométrico de Regresión Logística (Curva Logit) que aprende de los datos históricos, cruzando empíricamente los ataques confirmados (Sí/No) contra los niveles previos de negatividad y miedo latentes en los textos, trazando así una curva predictiva de probabilidad de 0 a 1 (0% a 100%).
 """)
+
+st.info("""**Conexión Teórica (El Filtro Humano vs. Regresión Logística):**
+La curva predictiva Logit de este estudio demuestra matemáticamente que la hostilidad mediática no responde a eventos aislados, sino a la acumulación progresiva de tensiones editoriales. El Análisis Crítico del Discurso sugiere que la objetividad es un mito sostenido por el "filtro humano". El Efecto Gatillo cuantifica exactamente cómo opera dicho filtro: la opinión promedio de los medios acumula sesgos sutiles y connotaciones negativas indirectas semana a semana, hasta que la presión del encuadre alcanza un umbral crítico de probabilidad, detonando un ataque editorial directo o encuadre de Culpabilidad Activa contra el actor político.""")
 
 import statsmodels.formula.api as smf
 
@@ -1277,7 +1272,7 @@ if cols_existentes_logit and 'prob_NEG' in df_analisis.columns and 'prob_fear' i
             ),
             plot_bgcolor='white', 
             height=600,
-            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5),
+            legend=dict(orientation="h", yanchor="top", y=-0.15, xanchor="center", x=0.5),
             xaxis_title="",
             yaxis_title="",
             xaxis=dict(showgrid=True, gridcolor='whitesmoke'),
@@ -1305,8 +1300,8 @@ else:
 # ==============================================================================
 st.markdown("""
 <div style='text-align: center; color: #4F4F4F; font-size: 0.95em; font-family: sans-serif; padding: 40px 0; border-top: 1px solid #EAEAEA; margin-top: 50px;'>
-    <p style='margin-bottom: 5px;'>Los datos presentados en este observatorio fueron extraídos, procesados y analizados directamente de los 6 medios masivos de comunicación mencionados a lo largo del reporte.</p>
-    <p style='margin-bottom: 25px;'>Este trabajo de investigación y desarrollo tecnológico fue realizado por el <b>Laboratorio Comunitarios de Ciencia y Tecnología</b>, ubicado en la ciudad de Popayán.</p>
+    <p style='margin-bottom: 5px;'>Los datos presentados en este trabajo fueron extraídos, procesados y analizados directamente de los 6 medios masivos de comunicación mencionados a lo largo del reporte.</p>
+    <p style='margin-bottom: 25px;'>Este trabajo de investigación y desarrollo tecnológico fue realizado por el <b>Laboratorio Comunitario de Ciencia y Tecnología</b>, ubicado en la ciudad de Popayán.</p>
     <div style='display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap;'>
         <span style='font-weight: 600; color: #333333;'>Autor e Investigador: Ing. Sami Yamid Morocho Rengifo</span>
         <span style='color: #cccccc;'>|</span>
