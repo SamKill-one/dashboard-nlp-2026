@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.io as pio
+import numpy as np
 
 # Configuración Global de Gráficos Plotly
 pio.templates.default = "plotly_white"
@@ -62,6 +63,10 @@ def load_data():
         
     df['fecha_publicacion'] = pd.to_datetime(df['fecha_publicacion'], errors='coerce')
     df['fecha_dia'] = df['fecha_publicacion'].dt.date
+    
+    if 'prob_POS' in df.columns and 'prob_NEG' in df.columns:
+        df['indice_sentimiento'] = df['prob_POS'] - df['prob_NEG']
+        
     return df
 
 df = load_data()
@@ -69,7 +74,18 @@ df = load_data()
 # Se quita el filtro global y se asigna df_filtrado directamente a df para mantener compatibilidad
 df_filtrado = df.copy()
 if 'tema_dominante' in df_filtrado.columns:
-    df_filtrado['tema_dominante'] = df_filtrado['tema_dominante'].replace('transición energética y medio ambiente', 'Transición<br>Energ.')
+    reemplazos = {
+        'seguridad': 'Seguridad y paz total',
+        'paz total': 'Seguridad y paz total',
+        'institucional': 'Institucionalidad y electoral',
+        'institucionalidad': 'Institucionalidad y electoral',
+        'transición energética y medio ambiente': 'Transición energética y medio ambiente',
+        'corrupción': 'Corrupción',
+        'economía': 'Economía',
+        'salud': 'Salud',
+        'internacional': 'Internacional'
+    }
+    df_filtrado['tema_dominante'] = df_filtrado['tema_dominante'].replace(reemplazos)
 # ==============================================================================
 # Buscador Ciudadano Interactivo de Noticias (EN EL SIDEBAR)
 # ==============================================================================
@@ -100,8 +116,8 @@ if not df_filtrado.empty:
             st.sidebar.markdown("---")
             for i, row in df_resultados.reset_index().iterrows():
                 titulo = row.get('titular', f'Artículo #{i+1}')
-                url = row.get('url', '#')
-                cuerpo = row.get('cuerpo', 'Texto no disponible.')
+                url = row.get('url', row.get('uuid_doc', '#'))
+                cuerpo = row.get('cuerpo', row.get('cuerpo_x', 'Texto no disponible.'))
                 html_noticia = f"""
                 <div style='background-color:#f9f9f9; padding:15px; border-radius:8px; margin-bottom:15px; border-left: 4px solid #2c3e50;'>
                     <h4 style='margin-top:0; color:#1a252f; font-size:14px;'>{titulo}</h4>
@@ -127,8 +143,10 @@ st.write(f"**Total de registros listos para EDA:** {len(df_filtrado)}")
 if not df_filtrado.empty:
     cols_necesarias = ['fecha_dia', 'titular', 'medio_emisor']
     cols_extra = []
+    col_cuerpo_real = 'cuerpo' if 'cuerpo' in df_filtrado.columns else ('cuerpo_x' if 'cuerpo_x' in df_filtrado.columns else None)
+    
     if 'autor' in df_filtrado.columns: cols_extra.append('autor')
-    if 'cuerpo' in df_filtrado.columns: cols_extra.append('cuerpo')
+    if col_cuerpo_real: cols_extra.append(col_cuerpo_real)
     
     try:
         df_muestra = df_filtrado.groupby('medio_emisor').sample(n=3, replace=False)
@@ -137,16 +155,19 @@ if not df_filtrado.empty:
         
     df_mostrar = df_muestra[cols_necesarias + cols_extra].copy()
     
-    if 'cuerpo' in df_mostrar.columns:
-        df_mostrar['cuerpo'] = df_mostrar['cuerpo'].astype(str).str.slice(0, 150) + '...'
+    if col_cuerpo_real:
+        df_mostrar[col_cuerpo_real] = df_mostrar[col_cuerpo_real].astype(str).str.slice(0, 150) + '...'
         
-    df_mostrar = df_mostrar.rename(columns={
+    rename_dict = {
         'fecha_dia': 'Fecha', 
         'titular': 'Encabezado', 
         'medio_emisor': 'Medio', 
-        'autor': 'Autor', 
-        'cuerpo': 'Fragmento de la noticia'
-    })
+        'autor': 'Autor'
+    }
+    if col_cuerpo_real:
+        rename_dict[col_cuerpo_real] = 'Fragmento de la noticia'
+        
+    df_mostrar = df_mostrar.rename(columns=rename_dict)
     
     df_mostrar = df_mostrar.sample(frac=1.0).reset_index(drop=True)
     df_mostrar.index.name = '#'
@@ -183,7 +204,7 @@ with col2:
         df_autores = df_filtrado.dropna(subset=['autor']).copy()
         df_autores = df_autores[df_autores['autor'].astype(str).str.strip() != '']
         
-        opciones_autores = sorted(df_autores['medio_emisor'].unique().tolist())
+        opciones_autores = sorted([str(x) for x in df_autores['medio_emisor'].dropna().unique()])
         idx_caracol = next((i for i, m in enumerate(opciones_autores) if "CARACOL" in str(m).upper()), 0)
         medio_autor = st.selectbox("Filtrar Autores por Medio:", opciones_autores, index=idx_caracol, key="autor_medio")
         
@@ -708,6 +729,19 @@ else:
 # Módulo 3: Dinámicas Actor Político-Medio (Panorama General)
 # ==============================================================================
 st.header("Módulo 3: Dinámicas Actor Político-Medio")
+
+# Generar dinámicamente _sesgo_detectado a partir de _indice_sentimiento (Compatibilidad Pipeline Fase 3)
+for col in df_filtrado.columns:
+    if col.endswith('_indice_sentimiento') and col != 'indice_sentimiento':
+        cand_name = col.replace('_indice_sentimiento', '')
+        sesgo_col = f"{cand_name}_sesgo_detectado"
+        if sesgo_col not in df_filtrado.columns:
+            def clasificar_sesgo(val):
+                if pd.isna(val): return "Sin Mencion"
+                if val > 0.14: return "Positivo"
+                elif val < -0.14: return "Negativo"
+                else: return "Neutral"
+            df_filtrado[sesgo_col] = df_filtrado[col].apply(clasificar_sesgo)
 
 cols_existentes = [col for col in df_filtrado.columns if '_sesgo_detectado' in col]
 
